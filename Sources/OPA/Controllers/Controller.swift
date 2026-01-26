@@ -11,6 +11,10 @@ public extension OPA {
         var argument: OPA.ConnectionArgument { get }
     }
     
+    struct SingleResult<T: Decodable & Sendable>: Decodable, Sendable {
+        let result: T?
+    }
+    
     struct Response: Sendable {
         private let res: HTTPClient.Response
         

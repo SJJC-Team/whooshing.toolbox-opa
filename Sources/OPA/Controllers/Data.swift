@@ -56,7 +56,7 @@ public extension OPA {
                 validStatusCode: [.noContent]
             ).map { _ in }
         }
-        
+
         public func get<T: Encodable & Sendable, G: Decodable & Sendable>(
             path: String,
             input: T? = nil,
@@ -79,7 +79,8 @@ public extension OPA {
                     return nil
                 }
                 
-                return try res.json().get()
+                let wrapped: SingleResult<G> = try res.json().get()
+                return wrapped.result
             }
         }
     }

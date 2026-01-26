@@ -33,7 +33,11 @@ public extension OPA {
                     "unknowns": AnyCodable(unknowns)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                try res.json().get()
+                let wrapped: SingleResult<T> = try res.json().get()
+                guard let result = wrapped.result else {
+                     throw Errcase.responseParseFailed.d("OPA 响应中缺少 'result' 字段", category: .internal)
+                }
+                return result
             }
         }
         
@@ -59,7 +63,11 @@ public extension OPA {
                     "unknowns": AnyCodable(unknowns)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                try res.json().get()
+                let wrapped: SingleResult<T> = try res.json().get()
+                guard let result = wrapped.result else {
+                     throw Errcase.responseParseFailed.d("OPA 响应中缺少 'result' 字段", category: .internal)
+                }
+                return result
             }
         }
     }

@@ -44,7 +44,8 @@ public extension OPA {
                     return nil
                 }
                 
-                return try res.json().get()
+                let wrapped: SingleResult<T> = try res.json().get()
+                return wrapped.result
             }
         }
         
@@ -53,7 +54,8 @@ public extension OPA {
                 uri: "/v1/policies",
                 method: .GET
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                try res.json().get()
+                let wrapped: SingleResult<[T]> = try res.json().get()
+                return wrapped.result ?? []
             }
         }
     }

@@ -9,7 +9,7 @@ public extension OPA {
         init(argument: OPA.ConnectionArgument) {
             self.argument = argument
         }
-        
+
         public func simple<
             G: Encodable & Sendable,
             T: Decodable & Sendable
@@ -40,7 +40,11 @@ public extension OPA {
                     "input": AnyCodable(input)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                try res.json().get()
+                let wrapped: SingleResult<T> = try res.json().get()
+                guard let result = wrapped.result else {
+                     throw Errcase.responseParseFailed.d("OPA 响应中缺少 'result' 字段", category: .internal)
+                }
+                return result
             }
         }
     }
