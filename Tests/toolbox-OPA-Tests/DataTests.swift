@@ -218,8 +218,19 @@ struct OPADataTesting {
     func dataShouldBeEmpty() async throws {
         let opa = try await TestingShared.getOPA()
         
-        let data: [String: AnyCodable]? = try await opa.data.all().get()
+        let data = try await opa.data.list(as: [String: AnyCodable].self).get()
         #expect(isEmpty(items: data))
+        
+        try await emptyAll(data: data)
+        
+        let res = try await opa.data.list(as: [String: AnyCodable].self).get()
+        #expect(res.count == 0)
+        
+        func emptyAll(data: [String: AnyCodable]) async throws {
+            for (k, _) in data {
+                try await opa.data.delete(of: "/" + k).get()
+            }
+        }
         
         func isEmpty(items: [String: Any]?) -> Bool {
             guard let res = items else {

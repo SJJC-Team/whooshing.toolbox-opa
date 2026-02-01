@@ -156,6 +156,5 @@ struct OPAPolicyTesting {
     @Test("测试结束")
     func end() async throws {
         TestingShared.testStage = .query
-        try! TestingShared.opa!.syncShutdown().get()
     }
 }

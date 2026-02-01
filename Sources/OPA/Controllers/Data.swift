@@ -1,6 +1,7 @@
 import NIOCore
 import NIOAdvanced
 import Foundation
+import ErrorHandle
 @preconcurrency import AnyCodable
 
 public extension OPA {
@@ -26,7 +27,7 @@ public extension OPA {
                 validStatusCode: [.noContent, .notModified],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
-                    .notFound: ("写操作冲突", .external),
+                    .notFound: ("写入的数据有冲突", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).map { res in
@@ -42,7 +43,7 @@ public extension OPA {
                 method: .DELETE,
                 validStatusCode: [.noContent],
                 errorStatusCode: [
-                    .notFound: ("路径未找到", .external),
+                    .notFound: ("路径未找到 - delete \(path)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).map { _ in }
@@ -62,36 +63,27 @@ public extension OPA {
                 validStatusCode: [.noContent],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
-                    .notFound: ("路径未找到", .external),
+                    .notFound: ("路径未找到 - patch \(path)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).map { _ in }
         }
         
-        public func all<G: Decodable & Sendable>(
+        public func list<G: Decodable & Sendable>(
             as type: G.Type = G.self,
             pretty: Bool = false
-        ) -> EventLoopRes<G?, Errcase> {
-            get(from: "", pretty: pretty)
+        ) -> EventLoopRes<G, Errcase> {
+            get(from: "", as: G.self, pretty: pretty).map { res in
+                guard let r = res else {
+                    fatalError("All 不应当为空")
+                }
+                
+                return r
+            }
         }
         
         public func get<G: Decodable & Sendable>(
             from path: String,
-            as type: G.Type = G.self,
-            pretty: Bool = false,
-            provenance: Bool = false
-        ) -> EventLoopRes<G?, Errcase> {
-            get(
-                from: path,
-                input: AnyCodable(nilLiteral: ()),
-                pretty: pretty,
-                provenance: provenance
-            )
-        }
-
-        public func get<T: Encodable & Sendable, G: Decodable & Sendable>(
-            from path: String,
-            input: T,
             as type: G.Type = G.self,
             pretty: Bool = false,
             provenance: Bool = false
@@ -103,9 +95,7 @@ public extension OPA {
                     URLQueryItem(name: "provenance", value: String(provenance))
                 ],
                 method: .POST,
-                body: [
-                    "input" : AnyCodable(input)
-                ],
+                body: AnyCodable(nilLiteral: ()),
                 validStatusCode: [.ok, .notFound],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
@@ -116,7 +106,9 @@ public extension OPA {
                     return nil
                 }
                 
-                let wrapped: SingleResult<G> = try res.json().get()
+                let wrapped: SingleResult<G> = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: G.self)) 失败", category: .internal) {
+                    try res.json().get()
+                }
                 return wrapped.result
             }
         }

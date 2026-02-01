@@ -42,7 +42,7 @@ public extension OPA {
             return .success(plain)
         }
         
-        func json<T>() -> Res<T, OPA.Errcase> where T: Decodable & Sendable {
+        func json<T>(as: T.Type = T.self) -> Res<T, OPA.Errcase> where T: Decodable & Sendable {
             guard
                 let contentType = res.headers.first(name: "Content-Type")?.lowercased(),
                 let body = res.body

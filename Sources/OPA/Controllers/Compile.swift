@@ -1,5 +1,6 @@
 import NIOCore
 import NIOAdvanced
+import ErrorHandle
 @preconcurrency import AnyCodable
 
 public extension OPA {
@@ -37,7 +38,9 @@ public extension OPA {
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                let wrapped: SingleResult<T> = try res.json().get()
+                let wrapped: SingleResult<T> = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: T.self)) 失败", category: .internal) {
+                    try res.json().get()
+                }
                 guard let result = wrapped.result else {
                      throw Errcase.responseParseFailed.d("OPA 响应中缺少 'result' 字段", category: .internal)
                 }
@@ -71,7 +74,9 @@ public extension OPA {
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                let wrapped: SingleResult<T> = try res.json().get()
+                let wrapped: SingleResult<T> = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: T.self)) 失败", category: .internal) {
+                    try res.json().get()
+                }
                 guard let result = wrapped.result else {
                      throw Errcase.responseParseFailed.d("OPA 响应中缺少 'result' 字段", category: .internal)
                 }

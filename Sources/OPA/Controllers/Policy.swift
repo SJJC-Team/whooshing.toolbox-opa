@@ -1,6 +1,7 @@
 import NIOCore
 import NIOAdvanced
 import Foundation
+import ErrorHandle
 
 public extension OPA {
     final class PolicyController: Controller {
@@ -33,7 +34,7 @@ public extension OPA {
                 method: .DELETE,
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
-                    .notFound: ("路径未找到", .external),
+                    .notFound: ("路径未找到 - delete \(id)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).map { _ in }
@@ -63,7 +64,9 @@ public extension OPA {
                     return nil
                 }
                 
-                let wrapped: SingleResult<PolicyResult<T>> = try res.json().get()
+                let wrapped = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: PolicyResult<T>.self)) 失败", category: .internal) {
+                    try res.json(as: SingleResult<PolicyResult<T>>.self).get()
+                }
                 return wrapped.result
             }
         }
@@ -78,7 +81,9 @@ public extension OPA {
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                let wrapped: SingleResult<[PolicyResult<T>]> = try res.json().get()
+                let wrapped = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: PolicyResult<T>.self)) 失败", category: .internal) {
+                    try res.json(as: SingleResult<[PolicyResult<T>]>.self).get()
+                }
                 return wrapped.result ?? []
             }
         }
