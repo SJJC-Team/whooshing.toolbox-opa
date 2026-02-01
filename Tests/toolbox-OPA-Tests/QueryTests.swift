@@ -27,7 +27,7 @@ struct OPAQueryTesting {
         #expect(policies.count == 0)
     }
     
-    typealias DataType = [String: AnyCodable]
+    typealias DataType = TestingShared.DataType
     
     static let simpleQueries: [(
         [(String, DataType)],
@@ -214,12 +214,12 @@ struct OPAQueryTesting {
     ) async throws {
         let opa = try await TestingShared.getOPA()
 
-        try await prepare(datas: datas.map { ($0.0, AnyCodable($0.1)) }, policies: policies)
+        try await TestingShared.prepare(datas: datas.map { ($0.0, AnyCodable($0.1)) }, policies: policies)
         
         let queryRes = try await opa.query.simple(input: input, as: AnyCodable.self).get()
         #expect(queryRes == result)
         
-        try await clean(policies: policies)
+        try await TestingShared.clean(policies: policies)
     }
     
     @Test("OPA Data 查询测试", .serialized, arguments: dataQueries)
@@ -232,12 +232,12 @@ struct OPAQueryTesting {
     ) async throws {
         let opa = try await TestingShared.getOPA()
         
-        try await prepare(datas: datas, policies: policies)
+        try await TestingShared.prepare(datas: datas, policies: policies)
         
         let queryRes = try await opa.query.data(from: path, input: input, as: AnyCodable.self).get()
         #expect(queryRes == result)
         
-        try await clean(policies: policies)
+        try await TestingShared.clean(policies: policies)
     }
 
     @Test("OPA adhoc 查询测试", .serialized, arguments: adhocQueries)
@@ -250,43 +250,12 @@ struct OPAQueryTesting {
     ) async throws {
         let opa = try await TestingShared.getOPA()
         
-        try await prepare(datas: datas, policies: policies)
+        try await TestingShared.prepare(datas: datas, policies: policies)
         
         let queryRes = try await opa.query.adhoc(query: query, input: input, as: AnyCodable.self).get()
         #expect(queryRes == result)
         
-        try await clean(policies: policies)
-    }
-    
-    func prepare(
-        datas: [(String, AnyCodable)],
-        policies: [(String, String)]
-    ) async throws {
-        let opa = try await TestingShared.getOPA()
-        
-        for data in datas {
-            let res = try await opa.data.save(on: data.0, data: data.1).get()
-            #expect(res == true)
-        }
-        
-        for policy in policies {
-            try await opa.policy.save(by: policy.0, content: policy.1).get()
-        }
-    }
-    
-    func clean(
-        policies: [(String, String)]
-    ) async throws {
-        let opa = try await TestingShared.getOPA()
-        
-        for policy in policies {
-            try await opa.policy.delete(of: policy.0).get()
-        }
-        
-        let datas = try await opa.data.list(as: DataType.self).get()
-        for (k, _) in datas {
-            try await opa.data.delete(of: "/" + k).get()
-        }
+        try await TestingShared.clean(policies: policies)
     }
     
     @MainActor

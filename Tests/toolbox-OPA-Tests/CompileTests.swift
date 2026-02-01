@@ -27,6 +27,45 @@ struct OPACompileTesting {
         #expect(policies.count == 0)
     }
     
+    typealias DataType = TestingShared.DataType
+    
+    static let partialQueries: [(
+        [(String, AnyCodable)],
+        [(String, String)],
+        String,
+        DataType,
+        OPA.PartialOption,
+        [String],
+        AnyCodable
+    )] = [
+        
+    ]
+    
+    @Test("Partial Query 测试", .serialized, arguments: partialQueries)
+    func partialQuery(
+        datas: [(String, AnyCodable)],
+        policies: [(String, String)],
+        query: String,
+        input: DataType,
+        options: OPA.PartialOption,
+        unknowns: [String],
+        result: AnyCodable
+    ) async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        try await TestingShared.prepare(datas: datas, policies: policies)
+        
+        let queryRes = try await opa.compile.partial(
+            query: query,
+            input: input,
+            options: options,
+            unknowns: unknowns,
+            as: AnyCodable.self
+        ).get()
+        #expect(queryRes == result)
+        
+        try await TestingShared.clean(policies: policies)
+    }
     
     @MainActor
     @Test("测试结束")

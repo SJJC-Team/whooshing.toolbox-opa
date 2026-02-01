@@ -4,6 +4,7 @@ import NIOPosix
 import NIO
 import Foundation
 @testable import OPA
+@preconcurrency import AnyCodable
 
 struct TestingShared {
     
@@ -40,6 +41,39 @@ struct TestingShared {
         opa = o
         
         return o
+    }
+    
+    typealias DataType = [String: AnyCodable]
+    
+    static func prepare(
+        datas: [(String, AnyCodable)],
+        policies: [(String, String)]
+    ) async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        for data in datas {
+            let res = try await opa.data.save(on: data.0, data: data.1).get()
+            #expect(res == true)
+        }
+        
+        for policy in policies {
+            try await opa.policy.save(by: policy.0, content: policy.1).get()
+        }
+    }
+    
+    static func clean(
+        policies: [(String, String)]
+    ) async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        for policy in policies {
+            try await opa.policy.delete(of: policy.0).get()
+        }
+        
+        let datas = try await opa.data.list(as: DataType.self).get()
+        for (k, _) in datas {
+            try await opa.data.delete(of: "/" + k).get()
+        }
     }
 }
 

@@ -214,6 +214,14 @@ struct OPADataTesting {
         try await opa.data.delete(of: path).get()
     }
     
+    @Test("Not Found 测试")
+    func notFound() async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        let res = try await opa.data.get(from: "/the/path/doesn/t/exist", as: [String: AnyCodable].self).get()
+        #expect(res == nil)
+    }
+    
     @Test("Data 应当为空")
     func dataShouldBeEmpty() async throws {
         let opa = try await TestingShared.getOPA()

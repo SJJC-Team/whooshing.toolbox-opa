@@ -18,7 +18,8 @@ public extension OPA {
             query: String,
             input: G?,
             options: PartialOption = .init(),
-            unknowns: [String]
+            unknowns: [String],
+            as: T.Type = T.self
         ) -> EventLoopRes<T, Errcase> {
             send(
                 uri: "/v1/compile",
@@ -55,7 +56,8 @@ public extension OPA {
             path: String,
             input: G,
             options: DataFilterOption = .init(),
-            unknowns: [String]
+            unknowns: [String],
+            as: T.Type = T.self
         ) -> EventLoopRes<T, Errcase> {
             send(
                 uri: "/v1/compile" + path,
@@ -87,7 +89,7 @@ public extension OPA {
 }
 
 public extension OPA {
-    struct PartialOption: Codable {
+    struct PartialOption: Codable, Sendable {
         let disableInlining: [String]?
         let nondeterminsticBuiltins: Bool
         
