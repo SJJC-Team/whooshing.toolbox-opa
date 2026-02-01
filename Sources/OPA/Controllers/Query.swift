@@ -19,7 +19,12 @@ public extension OPA {
             send(
                 uri: "/",
                 method: .POST,
-                body: input
+                body: input,
+                errorStatusCode: [
+                    .badRequest: ("请求不合法", .external),
+                    .notFound: ("路径未找到", .external),
+                    .internalServerError: ("服务器未知错误", .internal)
+                ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 try res.json().get()
             }
@@ -38,6 +43,11 @@ public extension OPA {
                 body: [
                     "query": AnyCodable(query),
                     "input": AnyCodable(input)
+                ],
+                errorStatusCode: [
+                    .badRequest: ("请求不合法", .external),
+                    .internalServerError: ("服务器未知错误", .internal),
+                    .notImplemented: ("流式传输未实现", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let wrapped: SingleResult<T> = try res.json().get()

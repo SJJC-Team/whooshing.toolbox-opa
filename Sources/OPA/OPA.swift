@@ -45,14 +45,20 @@ public final class OPA: Sendable {
         public let eventLoop: EventLoop
         public let logger: Logger
         
-        init(host: String, port: Int, eventLoop: EventLoop, logger: Logger) {
+        init(
+            host: String,
+            port: Int,
+            eventLoop: EventLoop,
+            logger: Logger,
+            proxy: HTTPClient.Configuration.Proxy? = nil
+        ) {
             self.host = host
             self.port = port
             self.eventLoop = eventLoop
             self.logger = logger
             self.client = HTTPClient(
                 eventLoopGroup: eventLoop,
-                configuration: .init(decompression: .enabled(limit: .ratio(10)))
+                configuration: .init(proxy: proxy, decompression: .enabled(limit: .ratio(10)))
             )
         }
         

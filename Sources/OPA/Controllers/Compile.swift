@@ -31,6 +31,10 @@ public extension OPA {
                     "input": AnyCodable(input),
                     "options": AnyCodable(options),
                     "unknowns": AnyCodable(unknowns)
+                ],
+                errorStatusCode: [
+                    .badRequest: ("请求不合法", .external),
+                    .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let wrapped: SingleResult<T> = try res.json().get()
@@ -41,13 +45,13 @@ public extension OPA {
             }
         }
         
-        public func getDateFilters<
+        public func getDataFilters<
             G: Encodable & Sendable,
             T: Decodable & Sendable
         >(
             path: String,
             input: G,
-            options: DataFilterOption,
+            options: DataFilterOption = .init(),
             unknowns: [String]
         ) -> EventLoopRes<T, Errcase> {
             send(
@@ -61,6 +65,10 @@ public extension OPA {
                     "input": AnyCodable(input),
                     "options": AnyCodable(options),
                     "unknowns": AnyCodable(unknowns)
+                ],
+                errorStatusCode: [
+                    .badRequest: ("请求不合法", .external),
+                    .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let wrapped: SingleResult<T> = try res.json().get()

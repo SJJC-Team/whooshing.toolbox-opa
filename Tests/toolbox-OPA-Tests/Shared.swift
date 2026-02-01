@@ -8,7 +8,10 @@ import Foundation
 struct TestingShared {
     
     enum TestStage {
-        case basic
+        case data
+        case policy
+        case query
+        case compile
     }
     
     static let host = ProcessInfo.processInfo.environment["GITHUB_OPA_TESTING_HOST"] ?? "localhost"
@@ -16,10 +19,10 @@ struct TestingShared {
     static let opaListening = try! isPortOpen(host: host, port: port)
     
     @MainActor static var opa: OPA? = nil
-    @MainActor static var testStage: TestStage = .basic
+    @MainActor static var testStage: TestStage = .data
     
     @MainActor
-    static func getOPA() -> OPA {
+    static func getOPA() throws -> OPA {
         if let opa = opa {
             return opa
         }
@@ -30,8 +33,9 @@ struct TestingShared {
             host: host,
             port: port,
             eventLoop: pool.next(),
-            logger: .init(label: "OPA-Testing"))
-        )
+            logger: .init(label: "OPA-Testing"),
+            proxy: try isPortOpen(host: "localhost", port: 9090) ? .server(host: "localhost", port: 9090) : nil
+        ))
         
         opa = o
         

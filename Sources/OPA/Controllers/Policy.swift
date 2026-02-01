@@ -11,50 +11,74 @@ public extension OPA {
         }
         
         public func save(
-            id: String,
+            by id: String,
             content: String
         ) -> EventLoopRes<Void, Errcase> {
             send(
                 uri: "/v1/policies/\(id)",
                 method: .PUT,
-                body: content
+                body: content,
+                errorStatusCode: [
+                    .badRequest: ("请求不合法", .external),
+                    .internalServerError: ("服务器未知错误", .internal)
+                ]
             ).map { _ in }
         }
         
         public func delete(
-            id: String
+            of id: String
         ) -> EventLoopRes<Void, Errcase> {
             send(
                 uri: "/v1/policies/\(id)",
-                method: .DELETE
+                method: .DELETE,
+                errorStatusCode: [
+                    .badRequest: ("请求不合法", .external),
+                    .notFound: ("路径未找到", .external),
+                    .internalServerError: ("服务器未知错误", .internal)
+                ]
             ).map { _ in }
         }
         
+        public struct PolicyResult<T: Decodable & Sendable>: Decodable, Sendable {
+            let id: String
+            let raw: String
+            let ast: T
+        }
+        
         public func get<T: Decodable & Sendable>(
-            id: String,
+            at id: String,
+            as type: T.Type = T.self,
             pretty: Bool = false
-        ) -> EventLoopRes<T?, Errcase> {
+        ) -> EventLoopRes<PolicyResult<T>?, Errcase> {
             send(
                 uri: "/v1/policies/\(id)",
                 queries: [URLQueryItem(name: "pretty", value: String(pretty))],
                 method: .GET,
-                validStatusCode: [.ok, .notFound]
+                validStatusCode: [.ok, .notFound],
+                errorStatusCode: [
+                    .internalServerError: ("服务器未知错误", .internal)
+                ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 if res.status == .notFound {
                     return nil
                 }
                 
-                let wrapped: SingleResult<T> = try res.json().get()
+                let wrapped: SingleResult<PolicyResult<T>> = try res.json().get()
                 return wrapped.result
             }
         }
         
-        public func list<T: Decodable & Sendable>() -> EventLoopRes<[T], Errcase> {
+        public func list<T: Decodable & Sendable>(
+            as type: T.Type = T.self
+        ) -> EventLoopRes<[PolicyResult<T>], Errcase> {
             send(
                 uri: "/v1/policies",
-                method: .GET
+                method: .GET,
+                errorStatusCode: [
+                    .internalServerError: ("服务器未知错误", .internal)
+                ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                let wrapped: SingleResult<[T]> = try res.json().get()
+                let wrapped: SingleResult<[PolicyResult<T>]> = try res.json().get()
                 return wrapped.result ?? []
             }
         }

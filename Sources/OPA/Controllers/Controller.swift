@@ -4,7 +4,7 @@ import NIOAdvanced
 import NIOHTTP1
 import Foundation
 import ErrorHandle
-import AnyCodable
+@preconcurrency import AnyCodable
 
 public extension OPA {
     protocol Controller: Sendable, AnyObject {
@@ -61,6 +61,35 @@ public extension OPA {
     }
 }
 
+public extension OPA {
+    enum PatchOperation: Encodable, Sendable {
+        case add(path: String, value: AnyCodable)
+        case remove(path: String)
+        case replace(path: String, value: AnyCodable)
+
+        private enum CodingKeys: String, CodingKey {
+            case op, path, value, from
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            switch self {
+            case .add(let path, let value):
+                try container.encode("add", forKey: .op)
+                try container.encode(path, forKey: .path)
+                try container.encode(value, forKey: .value)
+            case .remove(let path):
+                try container.encode("remove", forKey: .op)
+                try container.encode(path, forKey: .path)
+            case .replace(let path, let value):
+                try container.encode("replace", forKey: .op)
+                try container.encode(path, forKey: .path)
+                try container.encode(value, forKey: .value)
+            }
+        }
+    }
+}
+
 extension OPA {
     struct Err: Codable, Error, Sendable {
         let code: String
@@ -76,6 +105,30 @@ extension OPA {
     }
 }
 
+extension OPA.Err: CustomStringConvertible {
+    public var description: String {
+        desc(head: true)
+    }
+    
+    public func desc(head: Bool) -> String {
+        // 1. 基础错误码和消息
+        var desc = (head ? "OPA.Error: " : "") + "[\(code)] \(message)"
+        
+        // 2. 位置信息简写 (file:row:col)
+        if let loc = location {
+            desc += " AT: \(loc.file):\(loc.row):\(loc.col)"
+        }
+        
+        // 3. 嵌套错误处理 (递归拉平到一行)
+        if let subErrors = errors, !subErrors.isEmpty {
+            let subDesc = subErrors.map { $0.desc(head: false) }.joined(separator: ", ")
+            desc += " { \(subDesc) }"
+        }
+        
+        return desc
+    }
+}
+
 extension OPA.Controller {
     var eventLoop: EventLoop { argument.eventLoop }
     var client: HTTPClient { argument.client }
@@ -87,23 +140,25 @@ extension OPA.Controller {
         method: HTTPMethod,
         extraHeaders: [String: String] = [:],
         body: String? = nil,
-        validStatusCode: [HTTPResponseStatus] = [.ok]
+        validStatusCode: Set<HTTPResponseStatus> = [.ok],
+        errorStatusCode: [HTTPResponseStatus: (String, OPA.Errcase.ErrType.Category)] = [:]
     ) -> EventLoopRes<OPA.Response, OPA.Errcase> {
+        var headers: HTTPHeaders = ["Content-Type": "text/plain"]
+        
+        for (name, value) in extraHeaders {
+            headers.replaceOrAdd(name: name, value: value)
+        }
+        
         let req = Res<HTTPClient.Request, OPA.Errcase>(throws: OPA.Errcase.requestBuildFailed, category: .internal) {
             try HTTPClient.Request(
                 url: combineURL(uri: uri, queries: queries),
                 method: method,
-                headers: .init(
-                    [
-                        ("Content-Type", "text/plain")
-                    ] +
-                    Array(extraHeaders)
-                ),
+                headers: headers,
                 body: .byteBuffer(ByteBuffer(string: body ?? ""))
             )
         }
         
-        return __send(req: req, validStatusCode: validStatusCode)
+        return __send(req: req, validStatusCode: validStatusCode, errorStatusCode: errorStatusCode)
     }
     
     func send<T: Encodable & Sendable>(
@@ -112,18 +167,20 @@ extension OPA.Controller {
         method: HTTPMethod,
         extraHeaders: [String: String] = [:],
         body: T? = nil,
-        validStatusCode: [HTTPResponseStatus] = [.ok]
+        validStatusCode: Set<HTTPResponseStatus> = [.ok],
+        errorStatusCode: [HTTPResponseStatus: (String, OPA.Errcase.ErrType.Category)] = [:]
     ) -> EventLoopRes<OPA.Response, OPA.Errcase> {
+        var headers: HTTPHeaders = ["Content-Type": "application/json"]
+        
+        for (name, value) in extraHeaders {
+            headers.replaceOrAdd(name: name, value: value)
+        }
+        
         let req = Res<HTTPClient.Request, OPA.Errcase>(throws: OPA.Errcase.requestBuildFailed, category: .internal) {
             try HTTPClient.Request(
                 url: combineURL(uri: uri, queries: queries),
                 method: method,
-                headers: .init(
-                    [
-                        ("Content-Type", "application/json")
-                    ] +
-                    Array(extraHeaders)
-                ),
+                headers: headers,
                 body: .byteBuffer(
                     body == nil ?
                         ByteBuffer() :
@@ -134,7 +191,7 @@ extension OPA.Controller {
             )
         }
         
-        return __send(req: req, validStatusCode: validStatusCode)
+        return __send(req: req, validStatusCode: validStatusCode, errorStatusCode: errorStatusCode)
     }
     
     func combineURL(
@@ -143,6 +200,10 @@ extension OPA.Controller {
     ) -> String {
         var components = URLComponents(string: url + uri)
         
+        guard queries.count > 0 else {
+            return components?.url?.absoluteString ?? ""
+        }
+        
         components?.queryItems = queries
         
         return components?.url?.absoluteString ?? ""
@@ -150,25 +211,32 @@ extension OPA.Controller {
     
     func __send(
         req: Res<HTTPClient.Request, OPA.Errcase>,
-        validStatusCode: [HTTPResponseStatus]
+        validStatusCode: Set<HTTPResponseStatus>,
+        errorStatusCode: [HTTPResponseStatus: (String, OPA.Errcase.ErrType.Category)]
     ) -> EventLoopRes<OPA.Response, OPA.Errcase> {
         eventLoop.makeResultWithTask { () throws(OPA.Errcase.ErrType) in
             try req.get()
         }.flatMap { req in
             self.client.execute(request: req)
                 .withError(OPA.Errcase.requestFailed, category: .internal)
-        }.flatMapThrowing { res throws(OPA.Errcase.ErrType) in
-            guard (validStatusCode.contains { $0 == res.status }) else {
+        }.flatMap { res in
+            if let errors = errorStatusCode[res.status] {
+                return self.eventLoop.makeFailedResult(makeError(msg: errors.0, category: errors.1))
+            } else if !validStatusCode.contains(res.status) {
+                return self.eventLoop.makeFailedResult(makeError(msg: nil, category: .internal))
+            } else {
+                return self.eventLoop.makeSucceededResult(.init(res: res))
+            }
+            
+            func makeError(msg: String?, category: OPA.Errcase.ErrType.Category) -> OPA.Errcase.ErrType {
                 let error: OPA.Err?
                 if let body = res.body {
                     error = try? JSONDecoder().decode(OPA.Err.self, from: body)
                 } else {
                     error = nil
                 }
-                throw OPA.Errcase.requestFailed.d("OPA 返回非预期状态码: \(res.status)", category: .internal).subErr(error)
+                return OPA.Errcase.requestFailed.d(msg ?? "OPA 返回非预期状态码: \(res.status)", category: category).subErr(error)
             }
-            
-            return .init(res: res)
         }
     }
 }

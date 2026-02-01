@@ -12,7 +12,7 @@ public extension OPA {
         }
         
         public func save<T: Encodable & Sendable>(
-            path: String,
+            on path: String,
             ifNoneMatch: String? = "*",
             data: T
         ) -> EventLoopRes<Bool, Errcase> {
@@ -23,28 +23,34 @@ public extension OPA {
                     "If-None-Match": ifNoneMatch!
                 ],
                 body: data,
-                validStatusCode: [.noContent, .notModified]
+                validStatusCode: [.noContent, .notModified],
+                errorStatusCode: [
+                    .badRequest: ("请求不合法", .external),
+                    .notFound: ("写操作冲突", .external),
+                    .internalServerError: ("服务器未知错误", .internal)
+                ]
             ).map { res in
-                if res.status == .notModified {
-                    return false
-                }
-                return true
+                res.status == .noContent
             }
         }
         
         public func delete(
-            path: String
+            of path: String
         ) -> EventLoopRes<Void, Errcase> {
             send(
                 uri: "/v1/data" + path,
                 method: .DELETE,
-                validStatusCode: [.noContent]
+                validStatusCode: [.noContent],
+                errorStatusCode: [
+                    .notFound: ("路径未找到", .external),
+                    .internalServerError: ("服务器未知错误", .internal)
+                ]
             ).map { _ in }
         }
         
-        public func patch<T: Encodable & Sendable>(
-            path: String,
-            data: T
+        public func patch(
+            to path: String,
+            data: [PatchOperation]
         ) -> EventLoopRes<Void, Errcase> {
             send(
                 uri: "/v1/data" + path,
@@ -53,13 +59,40 @@ public extension OPA {
                     "Content-Type": "application/json-patch+json"
                 ],
                 body: data,
-                validStatusCode: [.noContent]
+                validStatusCode: [.noContent],
+                errorStatusCode: [
+                    .badRequest: ("请求不合法", .external),
+                    .notFound: ("路径未找到", .external),
+                    .internalServerError: ("服务器未知错误", .internal)
+                ]
             ).map { _ in }
+        }
+        
+        public func all<G: Decodable & Sendable>(
+            as type: G.Type = G.self,
+            pretty: Bool = false
+        ) -> EventLoopRes<G?, Errcase> {
+            get(from: "", pretty: pretty)
+        }
+        
+        public func get<G: Decodable & Sendable>(
+            from path: String,
+            as type: G.Type = G.self,
+            pretty: Bool = false,
+            provenance: Bool = false
+        ) -> EventLoopRes<G?, Errcase> {
+            get(
+                from: path,
+                input: AnyCodable(nilLiteral: ()),
+                pretty: pretty,
+                provenance: provenance
+            )
         }
 
         public func get<T: Encodable & Sendable, G: Decodable & Sendable>(
-            path: String,
-            input: T? = nil,
+            from path: String,
+            input: T,
+            as type: G.Type = G.self,
             pretty: Bool = false,
             provenance: Bool = false
         ) -> EventLoopRes<G?, Errcase> {
@@ -73,7 +106,11 @@ public extension OPA {
                 body: [
                     "input" : AnyCodable(input)
                 ],
-                validStatusCode: [.ok, .notFound]
+                validStatusCode: [.ok, .notFound],
+                errorStatusCode: [
+                    .badRequest: ("请求不合法", .external),
+                    .internalServerError: ("服务器未知错误", .internal)
+                ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 if res.status == .notFound {
                     return nil
