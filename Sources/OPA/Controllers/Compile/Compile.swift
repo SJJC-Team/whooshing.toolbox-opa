@@ -1,6 +1,7 @@
 import NIOCore
 import NIOAdvanced
 import ErrorHandle
+import Foundation
 @preconcurrency import AnyCodable
 
 public extension OPA {
@@ -19,15 +20,14 @@ public extension OPA {
             input: G?,
             options: PartialOption = .init(),
             unknowns: [String],
-            as: T.Type = T.self
-        ) -> EventLoopRes<T, Errcase> {
+            as: T.Type = T.self,
+            parameter: QueryParameter = .init()
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
             send(
                 uri: "/v1/compile",
+                queries: parameter.queryItems,
                 method: .POST,
-                extraHeaders: [
-                    "Content-Encoding": "gzip",
-                    "Accept-Encoding": "gzip"
-                ],
+                extraHeaders: [:],
                 body: [
                     "query": AnyCodable(query),
                     "input": AnyCodable(input),
@@ -39,13 +39,9 @@ public extension OPA {
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                let wrapped: SingleResult<T> = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: T.self)) 失败", category: .internal) {
+                try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<T?>.self)) 失败", category: .internal) {
                     try res.json().get()
                 }
-                guard let result = wrapped.result else {
-                     throw Errcase.responseParseFailed.d("OPA 响应中缺少 'result' 字段", category: .internal)
-                }
-                return result
             }
         }
         
@@ -57,13 +53,14 @@ public extension OPA {
             input: G,
             options: DataFilterOption = .init(),
             unknowns: [String],
-            as: T.Type = T.self
-        ) -> EventLoopRes<T, Errcase> {
+            as: T.Type = T.self,
+            parameter: QueryParameter = .init()
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
             send(
                 uri: "/v1/compile" + path,
+                queries: parameter.queryItems,
                 method: .POST,
                 extraHeaders: [
-                    "Content-Encoding": "gzip",
                     "Accept": options.format.value
                 ],
                 body: [
@@ -76,13 +73,9 @@ public extension OPA {
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                let wrapped: SingleResult<T> = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: T.self)) 失败", category: .internal) {
+                try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<T?>.self)) 失败", category: .internal) {
                     try res.json().get()
                 }
-                guard let result = wrapped.result else {
-                     throw Errcase.responseParseFailed.d("OPA 响应中缺少 'result' 字段", category: .internal)
-                }
-                return result
             }
         }
     }

@@ -150,8 +150,9 @@ struct OPADataTesting {
         var res = try await opa.data.save(on: path, ifNoneMatch: nil, data: data).get()
         #expect(res == true)
         
-        let dataOutput: [String: AnyCodable] = try #require(try await opa.data.get(from: path).get())
-        #expect(data == dataOutput)
+        let dataOutput = try #require(try await opa.data.get(from: path, as: [String: AnyCodable].self).get())
+        #expect(data == dataOutput.result)
+        #expect(dataOutput.warnings == nil)
         
         // 尝试覆盖，应当失败
         res = try await opa.data.save(on: path, data: data).get()
@@ -177,8 +178,9 @@ struct OPADataTesting {
         
         try await opa.data.patch(to: path, data: patchOperation).get()
         
-        let dataTest: [String: AnyCodable]? = try await opa.data.get(from: pathNew).get()
-        #expect(dataNew == dataTest)
+        let dataTest = try #require(try await opa.data.get(from: pathNew, as: [String: AnyCodable].self).get())
+        #expect(dataNew == dataTest.result)
+        #expect(dataTest.warnings == nil)
     }
     
     @Test("Patch 测试 2", .serialized, arguments: patchList2)
@@ -196,8 +198,9 @@ struct OPADataTesting {
         
         try await opa.data.patch(to: path, data: patchOperation).get()
         
-        let dataTest: [String: AnyCodable]? = try await opa.data.get(from: pathNew).get()
-        #expect(dataNew == dataTest)
+        let dataTest = try #require(try await opa.data.get(from: pathNew, as: [String: AnyCodable].self).get())
+        #expect(dataNew == dataTest.result)
+        #expect(dataTest.warnings == nil)
     }
     
     @Test("Delete 测试", .serialized, arguments:
@@ -208,8 +211,8 @@ struct OPADataTesting {
     func dataDelete(path: String, data: [String: AnyCodable]?) async throws {
         let opa = try await TestingShared.getOPA()
         
-        let d: [String: AnyCodable]? = try await opa.data.get(from: path).get()
-        #expect(d == data)
+        let d = try await opa.data.get(from: path, as: [String: AnyCodable].self).get()
+        #expect(d?.result == data)
         
         try await opa.data.delete(of: path).get()
     }
@@ -227,12 +230,12 @@ struct OPADataTesting {
         let opa = try await TestingShared.getOPA()
         
         let data = try await opa.data.list(as: [String: AnyCodable].self).get()
-        #expect(isEmpty(items: data))
+        #expect(isEmpty(items: data.result))
         
-        try await emptyAll(data: data)
+        try await emptyAll(data: data.result)
         
         let res = try await opa.data.list(as: [String: AnyCodable].self).get()
-        #expect(res.count == 0)
+        #expect(res.result.count == 0)
         
         func emptyAll(data: [String: AnyCodable]) async throws {
             for (k, _) in data {

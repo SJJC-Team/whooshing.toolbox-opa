@@ -17,10 +17,12 @@ public extension OPA {
             T: Decodable & Sendable
         >(
             input: G,
-            as: T.Type = T.self
+            as: T.Type = T.self,
+            parameter: SimpleQueryParameter = .init()
         ) -> EventLoopRes<T, Errcase> {
             send(
                 uri: "/",
+                queries: parameter.queryItems,
                 method: .POST,
                 body: input,
                 errorStatusCode: [
@@ -39,15 +41,11 @@ public extension OPA {
             from path: String,
             input: T,
             as type: G.Type = G.self,
-            pretty: Bool = false,
-            provenance: Bool = false
-        ) -> EventLoopRes<G?, Errcase> {
+            parameter: DataQueryParameter = .init()
+        ) -> EventLoopRes<Answer<G>?, Errcase> {
             send(
                 uri: "/v1/data" + path,
-                queries: [
-                    URLQueryItem(name: "pretty", value: String(pretty)),
-                    URLQueryItem(name: "provenance", value: String(provenance))
-                ],
+                queries: parameter.queryItems,
                 method: .POST,
                 body: [
                     "input" : AnyCodable(input)
@@ -62,10 +60,9 @@ public extension OPA {
                     return nil
                 }
                 
-                let wrapped: SingleResult<G> = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: SingleResult<G>.self)) 失败", category: .internal) {
+                return try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<G>?.self)) 失败", category: .internal) {
                     try res.json().get()
                 }
-                return wrapped.result
             }
         }
         
@@ -76,9 +73,11 @@ public extension OPA {
             query: String,
             input: G,
             as type: T.Type = T.self,
-        ) -> EventLoopRes<T, Errcase> {
+            parameter: AdhocQueryParameter = .init()
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
             send(
                 uri: "/v1/query",
+                queries: parameter.queryItems,
                 method: .POST,
                 body: [
                     "query": AnyCodable(query),
@@ -90,16 +89,9 @@ public extension OPA {
                     .notImplemented: ("流式传输未实现", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                let wrapped: SingleResult<T> = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: SingleResult<T>.self)) 失败", category: .internal) {
+                try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<T?>.self)) 失败", category: .internal) {
                     try res.json().get()
                 }
-                guard let result = wrapped.result else {
-                    let result = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: T.self)) 失败", category: .internal) {
-                        try res.json(as: T.self).get()
-                    }
-                    return result
-                }
-                return result
             }
         }
     }

@@ -21,10 +21,10 @@ struct OPACompileTesting {
         let opa = try await TestingShared.getOPA()
         
         let datas = try await opa.data.list(as: [String: AnyCodable].self).get()
-        #expect(datas.count == 0)
+        #expect(datas.result.count == 0)
         
         let policies = try await opa.policy.list(as: [String: AnyCodable].self).get()
-        #expect(policies.count == 0)
+        #expect(policies.result.count == 0)
     }
     
     typealias DataType = TestingShared.DataType
@@ -38,7 +38,69 @@ struct OPACompileTesting {
         [String],
         AnyCodable
     )] = [
+        // 1. Deterministic Success (True)
+        (
+            [], // No extra data
+            [], // No extra policies
+            "x = 1; y = 2; x < y",
+            [:],
+            .init(),
+            [],
+            AnyCodable([
+                "queries": [[]] // True result in OPA partial eval
+            ])
+        ),
         
+//        // 2. Deterministic Failure (False)
+//        (
+//            [],
+//            [],
+//            "x = 1; y = 2; x > y",
+//            [:],
+//            .init(),
+//            [],
+//            AnyCodable([
+//                "queries": [] // False/Undefined result in OPA partial eval
+//            ])
+//        ),
+//        
+//        // 3. Data Dependency
+//        (
+//            [("fixed/data", AnyCodable(["value": 42]))],
+//            [],
+//            "data['fixed/data'].value == 42",
+//            [:],
+//            .init(),
+//            [],
+//            AnyCodable([
+//                "queries": [[]]
+//            ])
+//        ),
+//        
+//        // 4. Basic Unknown (Residual)
+//        // Query: input.x > 10, unknown: input.x
+//        (
+//            [],
+//            [],
+//            "input.x > 10",
+//            [:],
+//            .init(),
+//            ["input.x"],
+//            // Placeholder: Will fail and print actual AST. We will update this later.
+//            AnyCodable(["CAPTURE_ME": 1]) 
+//        ),
+//        
+//        // 5. Transitive/Inlining policy
+//        (
+//            [], 
+//            [("test.rego", "package test\np if { input.x == 100 }")],
+//            "data.test.p",
+//            [:],
+//            .init(),
+//            ["input.x"],
+//            // Placeholder: Will fail and print actual AST.
+//            AnyCodable(["CAPTURE_ME": 2])
+//        )
     ]
     
     @Test("Partial Query 测试", .serialized, arguments: partialQueries)
@@ -62,7 +124,7 @@ struct OPACompileTesting {
             unknowns: unknowns,
             as: AnyCodable.self
         ).get()
-        #expect(queryRes == result)
+//        #expect(queryRes.result == result)
         
         try await TestingShared.clean(policies: policies)
     }

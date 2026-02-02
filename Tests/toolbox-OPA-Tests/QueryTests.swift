@@ -21,10 +21,10 @@ struct OPAQueryTesting {
         let opa = try await TestingShared.getOPA()
         
         let datas = try await opa.data.list(as: [String: AnyCodable].self).get()
-        #expect(datas.count == 0)
+        #expect(datas.result.count == 0)
         
         let policies = try await opa.policy.list(as: [String: AnyCodable].self).get()
-        #expect(policies.count == 0)
+        #expect(policies.result.count == 0)
     }
     
     typealias DataType = TestingShared.DataType
@@ -201,7 +201,7 @@ struct OPAQueryTesting {
             policies: [],
             query: "data.whitelist[_] == input.user",
             input: ["user": AnyCodable("not_exist")],
-            result: AnyCodable([:])
+            result: nil
         )
     ]
     
@@ -234,8 +234,8 @@ struct OPAQueryTesting {
         
         try await TestingShared.prepare(datas: datas, policies: policies)
         
-        let queryRes = try await opa.query.data(from: path, input: input, as: AnyCodable.self).get()
-        #expect(queryRes == result)
+        let queryRes = try #require(try await opa.query.data(from: path, input: input, as: AnyCodable.self).get())
+        #expect(queryRes.result == result)
         
         try await TestingShared.clean(policies: policies)
     }
@@ -253,7 +253,11 @@ struct OPAQueryTesting {
         try await TestingShared.prepare(datas: datas, policies: policies)
         
         let queryRes = try await opa.query.adhoc(query: query, input: input, as: AnyCodable.self).get()
-        #expect(queryRes == result)
+        if let res = queryRes.result {
+            #expect(res == result)
+        } else {
+            #expect(result == AnyCodable(nil))
+        }
         
         try await TestingShared.clean(policies: policies)
     }

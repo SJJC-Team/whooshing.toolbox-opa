@@ -15,10 +15,12 @@ public extension OPA {
         public func save<T: Encodable & Sendable>(
             on path: String,
             ifNoneMatch: String? = "*",
-            data: T
+            data: T,
+            parameter: SaveQueryParameter = .init()
         ) -> EventLoopRes<Bool, Errcase> {
             send(
                 uri: "/v1/data" + path,
+                queries: parameter.queryItems,
                 method: .PUT,
                 extraHeaders: ifNoneMatch == nil ? [:] : [
                     "If-None-Match": ifNoneMatch!
@@ -36,10 +38,12 @@ public extension OPA {
         }
         
         public func delete(
-            of path: String
+            of path: String,
+            parameter: DeleteQueryParameter = .init()
         ) -> EventLoopRes<Void, Errcase> {
             send(
                 uri: "/v1/data" + path,
+                queries: parameter.queryItems,
                 method: .DELETE,
                 validStatusCode: [.noContent],
                 errorStatusCode: [
@@ -71,9 +75,9 @@ public extension OPA {
         
         public func list<G: Decodable & Sendable>(
             as type: G.Type = G.self,
-            pretty: Bool = false
-        ) -> EventLoopRes<G, Errcase> {
-            get(from: "", as: G.self, pretty: pretty).map { res in
+            parameter: GetQueryParameter = .init()
+        ) -> EventLoopRes<Answer<G>, Errcase> {
+            get(from: "", as: G.self, parameter: parameter).map { res in
                 guard let r = res else {
                     fatalError("All 不应当为空")
                 }
@@ -85,31 +89,22 @@ public extension OPA {
         public func get<G: Decodable & Sendable>(
             from path: String,
             as type: G.Type = G.self,
-            pretty: Bool = false,
-            provenance: Bool = false
-        ) -> EventLoopRes<G?, Errcase> {
+            parameter: GetQueryParameter = .init()
+        ) -> EventLoopRes<Answer<G>?, Errcase> {
             send(
                 uri: "/v1/data" + path,
-                queries: [
-                    URLQueryItem(name: "pretty", value: String(pretty)),
-                    URLQueryItem(name: "provenance", value: String(provenance))
-                ],
+                queries: parameter.queryItems,
                 method: .POST,
-                body: AnyCodable(nilLiteral: ()),
-                validStatusCode: [.ok, .notFound],
+                body: [
+                    "input": AnyCodable([:])
+                ],
+                validStatusCode: [.ok],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                if res.status == .notFound {
-                    return nil
-                }
-                
-                let wrapped: SingleResult<G> = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: G.self)) 失败", category: .internal) {
-                    try res.json().get()
-                }
-                return wrapped.result
+                try? res.json().get()
             }
         }
     }

@@ -11,10 +11,6 @@ public extension OPA {
         var argument: OPA.ConnectionArgument { get }
     }
     
-    struct SingleResult<T: Decodable & Sendable>: Decodable, Sendable {
-        let result: T?
-    }
-    
     struct Response: Sendable {
         private let res: HTTPClient.Response
         
@@ -87,45 +83,6 @@ public extension OPA {
                 try container.encode(value, forKey: .value)
             }
         }
-    }
-}
-
-extension OPA {
-    struct Err: Codable, Error, Sendable {
-        let code: String
-        let message: String
-        let errors: [Self]?
-        let location: Location?
-        
-        struct Location: Codable, Sendable {
-            let file: String
-            let row: Int
-            let col: Int
-        }
-    }
-}
-
-extension OPA.Err: CustomStringConvertible {
-    public var description: String {
-        desc(head: true)
-    }
-    
-    public func desc(head: Bool) -> String {
-        // 1. 基础错误码和消息
-        var desc = (head ? "OPA.Error: " : "") + "[\(code)] \(message)"
-        
-        // 2. 位置信息简写 (file:row:col)
-        if let loc = location {
-            desc += " AT: \(loc.file):\(loc.row):\(loc.col)"
-        }
-        
-        // 3. 嵌套错误处理 (递归拉平到一行)
-        if let subErrors = errors, !subErrors.isEmpty {
-            let subDesc = subErrors.map { $0.desc(head: false) }.joined(separator: ", ")
-            desc += " { \(subDesc) }"
-        }
-        
-        return desc
     }
 }
 

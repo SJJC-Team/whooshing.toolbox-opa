@@ -96,7 +96,7 @@ struct OPAPolicyTesting {
         
         let r = try #require(try await opa.policy.get(at: id, as: [String: AnyCodable].self).get())
         
-        #expect(content == r.raw)
+        #expect(content == r.result.raw)
     }
     
     @Test("Policy 创建失败测试")
@@ -130,8 +130,8 @@ struct OPAPolicyTesting {
         
         let res = try await opa.policy.list(as: [String: AnyCodable].self).get()
         
-        #expect(res.count == Self.policyList.count)
-        #expect(res.allSatisfy { r in Self.policyList.contains { $0.1 == r.raw && $0.0 == r.id } })
+        #expect(res.result.count == Self.policyList.count)
+        #expect(res.result.allSatisfy { r in Self.policyList.contains { $0.1 == r.raw && $0.0 == r.id } })
     }
     
     @Test("Policy Delete 测试", arguments: policyList.map { $0.0 })
@@ -149,7 +149,15 @@ struct OPAPolicyTesting {
         let opa = try await TestingShared.getOPA()
         
         let list = try await opa.policy.list(as: [String: AnyCodable].self).get()
-        #expect(list.count == 0)
+        #expect(list.result.count == 0)
+    }
+    
+    @Test("Not Found 测试")
+    func notFound() async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        let res = try await opa.policy.get(at: "the_id_doesn_t_exist", as: AnyCodable.self).get()
+        #expect(res == nil)
     }
     
     @MainActor

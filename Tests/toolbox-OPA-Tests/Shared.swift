@@ -71,7 +71,7 @@ struct TestingShared {
         }
         
         let datas = try await opa.data.list(as: DataType.self).get()
-        for (k, _) in datas {
+        for (k, _) in datas.result {
             try await opa.data.delete(of: "/" + k).get()
         }
     }
