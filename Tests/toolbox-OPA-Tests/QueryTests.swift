@@ -20,10 +20,10 @@ struct OPAQueryTesting {
     func envPrepare() async throws {
         let opa = try await TestingShared.getOPA()
         
-        let datas = try await opa.data.list(as: [String: AnyCodable].self).get()
+        let datas = try await opa.data.list(as: [String: AnyCodable].self)
         #expect(datas.result.count == 0)
         
-        let policies = try await opa.policy.list(as: [String: AnyCodable].self).get()
+        let policies = try await opa.policy.list(as: [String: AnyCodable].self)
         #expect(policies.result.count == 0)
     }
     
@@ -216,7 +216,7 @@ struct OPAQueryTesting {
 
         try await TestingShared.prepare(datas: datas.map { ($0.0, AnyCodable($0.1)) }, policies: policies)
         
-        let queryRes = try await opa.query.simple(input: input, as: AnyCodable.self).get()
+        let queryRes = try await opa.query.simple(input: input, as: AnyCodable.self)
         #expect(queryRes == result)
         
         try await TestingShared.clean(policies: policies)
@@ -234,7 +234,7 @@ struct OPAQueryTesting {
         
         try await TestingShared.prepare(datas: datas, policies: policies)
         
-        let queryRes = try #require(try await opa.query.data(from: path, input: input, as: AnyCodable.self).get())
+        let queryRes = try #require(try await opa.query.data(from: path, input: input, as: AnyCodable.self))
         #expect(queryRes.result == result)
         
         try await TestingShared.clean(policies: policies)
@@ -252,7 +252,7 @@ struct OPAQueryTesting {
         
         try await TestingShared.prepare(datas: datas, policies: policies)
         
-        let queryRes = try await opa.query.adhoc(query: query, input: input, as: AnyCodable.self).get()
+        let queryRes = try await opa.query.adhoc(query: query, input: input, as: AnyCodable.self)
         if let res = queryRes.result {
             #expect(res == result)
         } else {

@@ -2,7 +2,13 @@ import Foundation
 @preconcurrency import AnyCodable
 
 public extension OPA.CompileController {
+    /// 部分求值结果
     struct PartialResult: Codable, Sendable, CustomStringConvertible {
+        /// 剩余查询条件列表
+        ///
+        /// 这是一个二维数组，表示析取范式 (DNF) 结构：
+        /// 外层数组表示 OR 关系，内层数组表示 AND 关系。
+        /// 例如: `[[a, b], [c]]` 表示 `(a AND b) OR c`。
         public let queries: [[QueryBlock]]?
         
         public var description: String {
@@ -15,8 +21,11 @@ public extension OPA.CompileController {
         }
     }
     
+    /// 查询块
     struct QueryBlock: Codable, Sendable, CustomStringConvertible {
+        /// 索引
         public let index: Int
+        /// 表达式项列表
         public let terms: [Term]
         
         public var description: String {
@@ -25,8 +34,11 @@ public extension OPA.CompileController {
         }
     }
     
+    /// 表达式项
     struct Term: Codable, Sendable, CustomStringConvertible {
+        /// 项类型
         public let type: TermType
+        /// 项值
         public let value: TermValue
 
         enum CodingKeys: String, CodingKey {
@@ -70,6 +82,7 @@ public extension OPA.CompileController {
         }
     }
 
+    /// 表达式项类型
     enum TermType: Sendable, Codable, CustomStringConvertible {
         case ref, `var`, number, string, bool, array, object
         case unknown(String)
@@ -112,11 +125,17 @@ public extension OPA.CompileController {
         }
     }
 
+    /// 表达式项值
     enum TermValue: Sendable, CustomStringConvertible {
+        /// 静态值
         case value(AnyCodable)
+        /// 引用
         indirect case ref([Term])
+        /// 数组
         indirect case array([Term])
+        /// 空值
         case null
+        /// 未知值
         case unknown
         
         public var description: String {

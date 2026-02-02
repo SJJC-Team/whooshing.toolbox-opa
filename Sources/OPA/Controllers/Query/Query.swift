@@ -21,7 +21,7 @@ public extension OPA {
         ///
         /// - Parameters:
         ///   - input: 输入数据
-        ///   - as: 结果类型
+        ///   - type: 结果类型
         ///   - parameter: 查询参数
         /// - Returns: 查询结果
         public func simple<
@@ -29,7 +29,7 @@ public extension OPA {
             T: Decodable & Sendable
         >(
             input: G,
-            as: T.Type = T.self,
+            as type: T.Type = T.self,
             parameter: SimpleQueryParameter = .init()
         ) -> EventLoopRes<T, Errcase> {
             send(
@@ -56,7 +56,7 @@ public extension OPA {
         /// - Parameters:
         ///   - path: 数据路径
         ///   - input: 输入数据
-        ///   - as: 结果类型
+        ///   - type: 结果类型
         ///   - parameter: 查询参数
         /// - Returns: 包含结果的 Answer
         public func data<T: Encodable & Sendable, G: Decodable & Sendable>(
@@ -95,7 +95,7 @@ public extension OPA {
         /// - Parameters:
         ///   - query: Rego 查询语句
         ///   - input: 输入数据
-        ///   - as: 结果类型
+        ///   - type: 结果类型
         ///   - parameter: 查询参数
         /// - Returns: 包含结果的 Answer
         public func adhoc<

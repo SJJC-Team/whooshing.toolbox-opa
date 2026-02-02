@@ -92,9 +92,9 @@ struct OPAPolicyTesting {
     func policyCreating(id: String, content: String) async throws {
         let opa = try await TestingShared.getOPA()
         
-        try await opa.policy.save(by: id, content: content).get()
+        try await opa.policy.save(by: id, content: content)
         
-        let r = try #require(try await opa.policy.get(at: id, as: [String: AnyCodable].self).get())
+        let r = try #require(try await opa.policy.get(at: id, as: [String: AnyCodable].self))
         
         #expect(content == r.result.raw)
     }
@@ -120,7 +120,7 @@ struct OPAPolicyTesting {
         """
         
         await #expect(throws: OPA.Errcase.ErrType.self) {
-            try await opa.policy.save(by: "testing_id", content: content).get()
+            try await opa.policy.save(by: "testing_id", content: content)
         }
     }
     
@@ -128,7 +128,7 @@ struct OPAPolicyTesting {
     func policyListTest() async throws {
         let opa = try await TestingShared.getOPA()
         
-        let res = try await opa.policy.list(as: [String: AnyCodable].self).get()
+        let res = try await opa.policy.list(as: [String: AnyCodable].self)
         
         #expect(res.result.count == Self.policyList.count)
         #expect(res.result.allSatisfy { r in Self.policyList.contains { $0.1 == r.raw && $0.0 == r.id } })
@@ -138,9 +138,9 @@ struct OPAPolicyTesting {
     func policyDelete(id: String) async throws {
         let opa = try await TestingShared.getOPA()
         
-        try await opa.policy.delete(of: id).get()
+        try await opa.policy.delete(of: id)
         
-        let res = try await opa.policy.get(at: id, as: [String: AnyCodable].self).get()
+        let res = try await opa.policy.get(at: id, as: [String: AnyCodable].self)
         #expect(res == nil)
     }
     
@@ -148,7 +148,7 @@ struct OPAPolicyTesting {
     func policyShouldBeEmpty() async throws {
         let opa = try await TestingShared.getOPA()
         
-        let list = try await opa.policy.list(as: [String: AnyCodable].self).get()
+        let list = try await opa.policy.list(as: [String: AnyCodable].self)
         #expect(list.result.count == 0)
     }
     
@@ -156,7 +156,7 @@ struct OPAPolicyTesting {
     func notFound() async throws {
         let opa = try await TestingShared.getOPA()
         
-        let res = try await opa.policy.get(at: "the_id_doesn_t_exist", as: AnyCodable.self).get()
+        let res = try await opa.policy.get(at: "the_id_doesn_t_exist", as: AnyCodable.self)
         #expect(res == nil)
     }
     

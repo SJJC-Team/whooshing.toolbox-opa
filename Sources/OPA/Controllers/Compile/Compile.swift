@@ -25,7 +25,7 @@ public extension OPA {
         ///   - input: 输入数据对象，可以是任意 `Encodable` 类型
         ///   - options: 编译选项 `PartialOption`
         ///   - unknowns: 未知变量列表，例如 `["input.user"]`
-        ///   - as: 结果解析类型，默认为 `PartialResult.self`
+        ///   - type: 结果解析类型，默认为 `PartialResult.self`
         ///   - parameter: 查询参数
         /// - Returns: `EventLoopRes<Answer<T>, Errcase>` 包含编译结果的 Future 对象
         public func partial<
@@ -36,7 +36,7 @@ public extension OPA {
             input: G?,
             options: PartialOption = .init(),
             unknowns: [String],
-            as: T.Type = PartialResult.self,
+            as type: T.Type = PartialResult.self,
             parameter: QueryParameter = .init()
         ) -> EventLoopRes<Answer<T>, Errcase> {
             send(
@@ -101,7 +101,7 @@ public extension OPA {
         ///   - options: SQL 过滤选项 (可配置表名映射等)
         ///   - unknowns: 未知变量列表
         ///   - parameter: 查询参数
-        ///   - as: 结果类型，默认为 `SQLTargetResult.self`
+        ///   - type: 结果类型，默认为 `SQLTargetResult.self`
         /// - Returns: 包含 SQL 查询片段的结果
         public func sqlDataFilter<
             G: Encodable & Sendable,
@@ -113,7 +113,7 @@ public extension OPA {
             options: SQLTargetDataFilterOption = .init(),
             unknowns: [String],
             parameter: QueryParameter = .init(),
-            as: T.Type = SQLTargetResult.self
+            as type: T.Type = SQLTargetResult.self
         ) -> EventLoopRes<Answer<T>, Errcase> {
             __dataFilter(
                 path: path,
@@ -134,7 +134,7 @@ public extension OPA {
         ///   - options: 多目标过滤选项 (可指定多个方言)
         ///   - unknowns: 未知变量列表
         ///   - parameter: 查询参数
-        ///   - as: 结果类型，默认为 `MultiTargetResult.self`
+        ///   - type: 结果类型，默认为 `MultiTargetResult.self`
         /// - Returns: 包含多目标结果的 `MultiTargetResult`
         public func dataFilter<
             G: Encodable & Sendable,
@@ -145,7 +145,7 @@ public extension OPA {
             options: MultiTargetDataFilterOption = .init(),
             unknowns: [String],
             parameter: QueryParameter = .init(),
-            as: T.Type = MultiTargetResult.self
+            as type: T.Type = MultiTargetResult.self
         ) -> EventLoopRes<Answer<T>, Errcase> {
             __dataFilter(
                 path: path,

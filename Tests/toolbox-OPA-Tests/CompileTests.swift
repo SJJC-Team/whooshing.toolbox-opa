@@ -20,10 +20,10 @@ struct OPACompileTesting {
     func envPrepare() async throws {
         let opa = try await TestingShared.getOPA()
         
-        let datas = try await opa.data.list(as: [String: AnyCodable].self).get()
+        let datas = try await opa.data.list(as: [String: AnyCodable].self)
         #expect(datas.result.count == 0)
         
-        let policies = try await opa.policy.list(as: [String: AnyCodable].self).get()
+        let policies = try await opa.policy.list(as: [String: AnyCodable].self)
         #expect(policies.result.count == 0)
     }
     
@@ -449,7 +449,7 @@ struct OPACompileTesting {
             input: input,
             options: options,
             unknowns: unknowns
-        ).get()
+        )
         #expect(try result(queryRes))
         
         try await TestingShared.clean(policies: policies)
@@ -476,7 +476,7 @@ struct OPACompileTesting {
             target: target,
             options: options,
             unknowns: unknowns,
-        ).get()
+        )
         #expect(try result(queryRes))
         
         print(queryRes)
@@ -505,7 +505,7 @@ struct OPACompileTesting {
             target: target,
             options: options,
             unknowns: unknowns
-        ).get()
+        )
         #expect(try result(queryRes))
         
         print(queryRes)
@@ -532,7 +532,7 @@ struct OPACompileTesting {
             input: input,
             options: options,
             unknowns: unknowns
-        ).get()
+        )
         #expect(try result(queryRes))
         
         print(queryRes)
@@ -543,6 +543,6 @@ struct OPACompileTesting {
     @MainActor
     @Test("测试结束")
     func end() async throws {
-        try! TestingShared.opa!.syncShutdown().get()
+        try! TestingShared.opa!.syncShutdown()
     }
 }
