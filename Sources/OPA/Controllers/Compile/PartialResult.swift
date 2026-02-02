@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import AnyCodable
 
 public extension OPA.CompileController {
-    struct PartialResultBlock: Codable, Sendable, CustomStringConvertible {
+    struct PartialResult: Codable, Sendable, CustomStringConvertible {
         public let queries: [[QueryBlock]]?
         
         public var description: String {

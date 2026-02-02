@@ -38,7 +38,10 @@ public extension OPA {
             return .success(plain)
         }
         
-        func json<T>(as: T.Type = T.self) -> Res<T, OPA.Errcase> where T: Decodable & Sendable {
+        func json<T>(
+            as: T.Type = T.self,
+            accept: String = "application/json"
+        ) -> Res<T, OPA.Errcase> where T: Decodable & Sendable {
             guard
                 let contentType = res.headers.first(name: "Content-Type")?.lowercased(),
                 let body = res.body
@@ -46,8 +49,8 @@ public extension OPA {
                 return .failure(OPA.Errcase.badResponse.d("预期从 OPA 得到 Json，却得到空响应体", category: .external))
             }
             
-            guard contentType == "application/json" else {
-                return .failure(OPA.Errcase.badResponse.d("预期 OPA 响应体为 \"application/json\"，却得到 \(log: contentType)", category: .external))
+            guard contentType == accept else {
+                return .failure(OPA.Errcase.badResponse.d("预期 OPA 响应体为 \(log: accept)，却得到 \(log: contentType)", category: .external))
             }
             
             return .init(throws: OPA.Errcase.responseParseFailed, "将响应体反序列化为 \(String(describing: T.self)) 类型失败", category: .internal) {

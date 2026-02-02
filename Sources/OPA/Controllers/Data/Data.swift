@@ -29,7 +29,7 @@ public extension OPA {
                 validStatusCode: [.noContent, .notModified],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
-                    .notFound: ("写入的数据有冲突", .external),
+                    .notFound: ("路径未找到 - save \(path)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).map { res in
