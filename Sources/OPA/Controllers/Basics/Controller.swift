@@ -7,10 +7,14 @@ import ErrorHandle
 @preconcurrency import AnyCodable
 
 public extension OPA {
+    /// 基础控制器协议
+    ///
+    /// 所有 OPA 功能控制器都应遵守此协议，提供基础的连接参数。
     protocol Controller: Sendable, AnyObject {
         var argument: OPA.ConnectionArgument { get }
     }
     
+    /// HTTP 响应封装结构体
     struct Response: Sendable {
         private let res: HTTPClient.Response
         
@@ -61,9 +65,15 @@ public extension OPA {
 }
 
 public extension OPA {
+    /// JSON Patch 操作定义
+    ///
+    /// 遵循 RFC 6902 标准，用于对 OPA 数据进行增量更新。
     enum PatchOperation: Encodable, Sendable {
+        /// 添加操作
         case add(path: String, value: AnyCodable)
+        /// 移除操作
         case remove(path: String)
+        /// 替换操作
         case replace(path: String, value: AnyCodable)
 
         private enum CodingKeys: String, CodingKey {

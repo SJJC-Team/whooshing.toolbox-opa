@@ -1,6 +1,9 @@
 public extension OPA.CompileController {
+    /// 部分求值选项
     struct PartialOption: Codable, Sendable {
+        /// 禁止内联的规则或函数路径列表
         public let disableInlining: [String]?
+        /// 是否将不确定的内建函数（如 `time.now_ns`）视为动态值而非在该时刻求值
         public let nondeterminsticBuiltins: Bool
         
         public init(disableInlining: [String]? = nil, nondeterminsticBuiltins: Bool = false) {
@@ -9,10 +12,16 @@ public extension OPA.CompileController {
         }
     }
     
+    /// 多目标数据过滤选项
     struct MultiTargetDataFilterOption: Codable, Sendable {
+        /// 需要生成的目标方言列表
         public let targetDialects: [TargetDialect]
+        /// 禁止内联的路径
         public let disableInlining: [String]
+        /// 用于覆盖默认规则的 Mask 规则路径
         public let maskRule: String?
+        /// 针对 SQL 目标的表名映射配置
+        /// 键为 SQL 方言，值为 [原始表名: [配置项: 实际值]] 的嵌套字典
         public let targetSQLTableMappings: [TargetDialect.SQL: [String: [String: String]]]
         
         public init(
@@ -68,8 +77,11 @@ public extension OPA.CompileController {
         }
     }
     
+    /// UCAST 目标数据过滤选项
     struct UCASTTargetDataFilterOption: Codable, Sendable {
+        /// 禁止内联的路径
         public let disableInlining: [String]
+        /// Mask 规则路径
         public let maskRule: String?
         
         public init(
@@ -81,10 +93,15 @@ public extension OPA.CompileController {
         }
     }
     
+    /// SQL 目标数据过滤选项
     struct SQLTargetDataFilterOption: Encodable, Sendable {
+        /// 指定 SQL 方言 (内部设置)
         public internal(set) var sqlDialect: TargetDialect.SQL!
+        /// 禁止内联的路径
         public let disableInlining: [String]
+        /// Mask 规则路径
         public let maskRule: String?
+        /// 表名/列名映射配置
         public let tableMapping: [String: [String: String]]
         
         public init(
@@ -122,8 +139,11 @@ public extension OPA.CompileController {
         }
     }
    
+    /// 编译目标方言
     enum TargetDialect: CaseIterable, Hashable, Sendable {
+        /// UCAST (Universal Abstract Syntax Tree) 格式
         case ucast(UCAST)
+        /// SQL 语句格式
         case sql(SQL)
         
         public enum UCAST: String, CaseIterable, Sendable {

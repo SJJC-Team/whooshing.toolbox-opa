@@ -5,6 +5,9 @@ import ErrorHandle
 @preconcurrency import AnyCodable
 
 public extension OPA {
+    /// 查询控制器
+    ///
+    /// 提供多种查询 OPA 决策的方式，包括简单查询、针对特定数据路径的查询以及 Ad-hoc 查询。
     final class QueryController: Controller {
         public let argument: OPA.ConnectionArgument
         
@@ -12,6 +15,15 @@ public extension OPA {
             self.argument = argument
         }
 
+        /// 简单查询
+        ///
+        /// 向 OPA 根路径 `/` 发送请求，通常用于查询 `default` 决策。
+        ///
+        /// - Parameters:
+        ///   - input: 输入数据
+        ///   - as: 结果类型
+        ///   - parameter: 查询参数
+        /// - Returns: 查询结果
         public func simple<
             G: Encodable & Sendable,
             T: Decodable & Sendable
@@ -37,6 +49,16 @@ public extension OPA {
             }
         }
         
+        /// 数据路径查询
+        ///
+        /// 查询 OPA 中指定路径的数据或策略决策（例如 `/v1/data/authz/allow`）。
+        ///
+        /// - Parameters:
+        ///   - path: 数据路径
+        ///   - input: 输入数据
+        ///   - as: 结果类型
+        ///   - parameter: 查询参数
+        /// - Returns: 包含结果的 Answer
         public func data<T: Encodable & Sendable, G: Decodable & Sendable>(
             from path: String,
             input: T,
@@ -66,6 +88,16 @@ public extension OPA {
             }
         }
         
+        /// Ad-hoc 查询
+        ///
+        /// 执行任意的 Rego 查询语句（例如 `data.authz.allow == true`）。
+        ///
+        /// - Parameters:
+        ///   - query: Rego 查询语句
+        ///   - input: 输入数据
+        ///   - as: 结果类型
+        ///   - parameter: 查询参数
+        /// - Returns: 包含结果的 Answer
         public func adhoc<
             G: Encodable & Sendable,
             T: Decodable & Sendable
