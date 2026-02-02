@@ -34,73 +34,73 @@ struct OPACompileTesting {
         [(String, String)],
         String,
         DataType,
-        OPA.PartialOption,
+        OPA.CompileController.PartialOption,
         [String],
-        AnyCodable
+        @Sendable (OPA.Answer<OPA.CompileController.PartialResultBlock>) throws -> Bool
     )] = [
-        // 1. Deterministic Success (True)
+        // 1. Deterministic Success (True) -> 结果应为 queries: [[]]
         (
-            [], // No extra data
-            [], // No extra policies
-            "x = 1; y = 2; x < y",
+            [], [], "x = 1; y = 2; x < y", [:], .init(), [],
+            {
+                $0.result.description == """
+                [ref(eq) var("x") number(1)] AND [ref(eq) var("y") number(2)]
+                """
+            }
+        ),
+        
+        // 2. Deterministic Failure (False) -> 结果应为 queries: []
+        (
+            [], [], "x = 1; y = 2; x > y", [:], .init(), [],
+            {
+                $0.result.description == "always false"
+            }
+        ),
+        
+        // 3. Data Dependency -> 即使有外部数据，能算出来的也应该是 True
+        (
+            [("/fixed/data", AnyCodable(["value": 42]))],
+            [],
+            "data.fixed.data.value == 42",
             [:],
             .init(),
             [],
-            AnyCodable([
-                "queries": [[]] // True result in OPA partial eval
-            ])
+            {
+                $0.result.description == "always true"
+            }
         ),
         
-//        // 2. Deterministic Failure (False)
-//        (
-//            [],
-//            [],
-//            "x = 1; y = 2; x > y",
-//            [:],
-//            .init(),
-//            [],
-//            AnyCodable([
-//                "queries": [] // False/Undefined result in OPA partial eval
-//            ])
-//        ),
-//        
-//        // 3. Data Dependency
-//        (
-//            [("fixed/data", AnyCodable(["value": 42]))],
-//            [],
-//            "data['fixed/data'].value == 42",
-//            [:],
-//            .init(),
-//            [],
-//            AnyCodable([
-//                "queries": [[]]
-//            ])
-//        ),
-//        
-//        // 4. Basic Unknown (Residual)
-//        // Query: input.x > 10, unknown: input.x
-//        (
-//            [],
-//            [],
-//            "input.x > 10",
-//            [:],
-//            .init(),
-//            ["input.x"],
-//            // Placeholder: Will fail and print actual AST. We will update this later.
-//            AnyCodable(["CAPTURE_ME": 1]) 
-//        ),
-//        
-//        // 5. Transitive/Inlining policy
-//        (
-//            [], 
-//            [("test.rego", "package test\np if { input.x == 100 }")],
-//            "data.test.p",
-//            [:],
-//            .init(),
-//            ["input.x"],
-//            // Placeholder: Will fail and print actual AST.
-//            AnyCodable(["CAPTURE_ME": 2])
-//        )
+        // 4. Basic Unknown (Residual) -> 检查是否包含残余表达式 "input.x > 10"
+        (
+            [], [], "input.x > 10", [:], .init(), ["input.x"],
+            {
+                $0.result.description == "[ref(gt) ref(input.x) number(10)]"
+            }
+        ),
+        
+        // 5. Transitive/Inlining policy -> 检查是否正确内联并保留了 input.x 的判断
+        (
+            [],
+            [("test.rego", "package test\np if { input.x == 100 }")],
+            "data.test.p",
+            [:],
+            .init(),
+            ["input.x"],
+            {
+                $0.result.description == "[ref(eq) ref(input.x) number(100)]"
+            }
+        )
+    ]
+    
+    static let dataFilterQueries: [(
+        [(String, AnyCodable)],
+        [(String, String)],
+        String,
+        DataType,
+        OPA.CompileController.DataFilterOption,
+        [String],
+        @Sendable (OPA.Answer<DataType>) throws -> Bool
+    )] = [
+        
     ]
     
     @Test("Partial Query 测试", .serialized, arguments: partialQueries)
@@ -109,9 +109,9 @@ struct OPACompileTesting {
         policies: [(String, String)],
         query: String,
         input: DataType,
-        options: OPA.PartialOption,
+        options: OPA.CompileController.PartialOption,
         unknowns: [String],
-        result: AnyCodable
+        result: @Sendable (OPA.Answer<OPA.CompileController.PartialResultBlock>) throws -> Bool
     ) async throws {
         let opa = try await TestingShared.getOPA()
         
@@ -121,10 +121,35 @@ struct OPACompileTesting {
             query: query,
             input: input,
             options: options,
-            unknowns: unknowns,
-            as: AnyCodable.self
+            unknowns: unknowns
         ).get()
-//        #expect(queryRes.result == result)
+        #expect(try result(queryRes))
+        
+        try await TestingShared.clean(policies: policies)
+    }
+    
+    @Test("Data Filter Query 测试", .serialized, arguments: dataFilterQueries)
+    func dataFilterQuery(
+        datas: [(String, AnyCodable)],
+        policies: [(String, String)],
+        path: String,
+        input: DataType,
+        options: OPA.CompileController.DataFilterOption,
+        unknowns: [String],
+        result: @Sendable (OPA.Answer<DataType>) throws -> Bool
+    ) async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        try await TestingShared.prepare(datas: datas, policies: policies)
+        
+        let queryRes = try await opa.compile.dataFilter(
+            path: path,
+            input: input,
+            options: options,
+            unknowns: unknowns,
+            as: DataType.self
+        ).get()
+        #expect(try result(queryRes))
         
         try await TestingShared.clean(policies: policies)
     }
