@@ -4,6 +4,8 @@ import NIOAdvanced
 import NIOHTTP1
 import Foundation
 import ErrorHandle
+import Logging
+import LoggingAdvanced
 @preconcurrency import AnyCodable
 
 public extension OPA {
@@ -12,19 +14,24 @@ public extension OPA {
     /// 所有 OPA 功能控制器都应遵守此协议，提供基础的连接参数。
     protocol Controller: Sendable, AnyObject {
         var argument: OPA.ConnectionArgument { get }
+        var logger: Logger { get }
     }
     
     /// HTTP 响应封装结构体
     struct Response: Sendable {
         private let res: HTTPClient.Response
+        private let logger: Logger
         
-        fileprivate init(res: HTTPClient.Response) {
+        fileprivate init(res: HTTPClient.Response, logger: Logger) {
             self.res = res
+            self.logger = logger
         }
         
         var status: HTTPResponseStatus { res.status }
         
         func plain() -> Res<String, OPA.Errcase> {
+            logger.debug("从响应体中提取内容", metadata: ["contentType": "text/plain", "body": .string(res.body == nil ? "0" : "\(res.body!.readableBytes)bytes")])
+            
             guard
                 let contentType = res.headers.first(name: "Content-Type")?.lowercased(),
                 let body = res.body
@@ -33,12 +40,15 @@ public extension OPA {
             }
             
             guard contentType == "text/plain" else {
-                return .failure(OPA.Errcase.badResponse.d("预期 OPA 响应体为 \"text/plain\"，却得到 \(log: contentType)", category: .external))
+                return .failure(OPA.Errcase.badResponse.d("OPA 响应体格式非预期，预期为 text/plain", category: .external).metadata(["from": "\(contentType)"]))
             }
             
             guard let plain = body.getString(at: body.readerIndex, length: body.readableBytes) else {
                 return .failure(OPA.Errcase.responseParseFailed.d("将返回体解码为 String 时失败", category: .internal))
             }
+            
+            logger.debug("从响应体中提取成功")
+            
             return .success(plain)
         }
         
@@ -46,6 +56,8 @@ public extension OPA {
             as: T.Type = T.self,
             accept: String = "application/json"
         ) -> Res<T, OPA.Errcase> where T: Decodable & Sendable {
+            logger.debug("从响应体中提取内容", metadata: ["contentType": .string(accept), "body": .string(res.body == nil ? "0" : "\(res.body!.readableBytes)bytes")])
+            
             guard
                 let contentType = res.headers.first(name: "Content-Type")?.lowercased(),
                 let body = res.body
@@ -58,7 +70,9 @@ public extension OPA {
             }
             
             return .init(throws: OPA.Errcase.responseParseFailed, "将响应体反序列化为 \(String(describing: T.self)) 类型失败", category: .internal) {
-                try JSONDecoder().decode(T.self, from: body)
+                let res = try JSONDecoder().decode(T.self, from: body)
+                logger.debug("从响应体中提取成功")
+                return res
             }
         }
     }
@@ -104,12 +118,17 @@ extension OPA.Controller {
     var client: HTTPClient { argument.client }
     var url: String { argument.url }
     
+    func getRequestLogger() -> Logger {
+        self.logger.derive(metadata: ["request-id": .stringConvertible(UUID())])
+    }
+    
     func send(
         uri: String,
         queries: [URLQueryItem] = [],
         method: HTTPMethod,
         extraHeaders: [String: String] = [:],
         body: String? = nil,
+        logger: Logger,
         validStatusCode: Set<HTTPResponseStatus> = [.ok],
         errorStatusCode: [HTTPResponseStatus: (String, OPA.Errcase.ErrType.Category)] = [:]
     ) -> EventLoopRes<OPA.Response, OPA.Errcase> {
@@ -128,7 +147,7 @@ extension OPA.Controller {
             )
         }
         
-        return __send(req: req, validStatusCode: validStatusCode, errorStatusCode: errorStatusCode)
+        return __send(req: req, logger: logger, validStatusCode: validStatusCode, errorStatusCode: errorStatusCode)
     }
     
     func send<T: Encodable & Sendable>(
@@ -137,6 +156,7 @@ extension OPA.Controller {
         method: HTTPMethod,
         extraHeaders: [String: String] = [:],
         body: T? = nil,
+        logger: Logger,
         validStatusCode: Set<HTTPResponseStatus> = [.ok],
         errorStatusCode: [HTTPResponseStatus: (String, OPA.Errcase.ErrType.Category)] = [:]
     ) -> EventLoopRes<OPA.Response, OPA.Errcase> {
@@ -154,14 +174,14 @@ extension OPA.Controller {
                 body: .byteBuffer(
                     body == nil ?
                         ByteBuffer() :
-                        try required(throws: OPA.Errcase.requestBuildFailed, "从 \(String(describing: T.self)) 类型 JSON 序列化失败", category: .external) {
+                        try required(throws: OPA.Errcase.requestBuildFailed, "JSON 序列化失败", metadata: ["from": "\(T.self)"], category: .external) {
                             ByteBuffer(data: try JSONEncoder().encode(body!))
                         }
                 )
             )
         }
         
-        return __send(req: req, validStatusCode: validStatusCode, errorStatusCode: errorStatusCode)
+        return __send(req: req, logger: logger, validStatusCode: validStatusCode, errorStatusCode: errorStatusCode)
     }
     
     func combineURL(
@@ -181,21 +201,28 @@ extension OPA.Controller {
     
     func __send(
         req: Res<HTTPClient.Request, OPA.Errcase>,
+        logger: Logger,
         validStatusCode: Set<HTTPResponseStatus>,
-        errorStatusCode: [HTTPResponseStatus: (String, OPA.Errcase.ErrType.Category)]
+        errorStatusCode: [HTTPResponseStatus: (String, OPA.Errcase.ErrType.Category)],
     ) -> EventLoopRes<OPA.Response, OPA.Errcase> {
         eventLoop.makeResultWithTask { () throws(OPA.Errcase.ErrType) in
-            try req.get()
+            let r = try req.get()
+            logger.debug("请求已建立，准备发送", metadata: ["req": .data(r)])
+            return r
         }.flatMap { req in
-            self.client.execute(request: req)
+            self.client.execute(request: req, logger: logger.derive(subId: "client"))
                 .withError(OPA.Errcase.requestFailed, category: .internal)
         }.flatMap { res in
+            logger.debug("收到 OPA 响应", metadata: ["res": .data(res), "status": .stringConvertible(res.status)])
+            
             if let errors = errorStatusCode[res.status] {
                 return self.eventLoop.makeFailedResult(makeError(msg: errors.0, category: errors.1))
             } else if !validStatusCode.contains(res.status) {
                 return self.eventLoop.makeFailedResult(makeError(msg: nil, category: .internal))
             } else {
-                return self.eventLoop.makeSucceededResult(.init(res: res))
+                let response = OPA.Response(res: res, logger: logger)
+                logger.debug("响应处理成功")
+                return self.eventLoop.makeSucceededResult(response)
             }
             
             func makeError(msg: String?, category: OPA.Errcase.ErrType.Category) -> OPA.Errcase.ErrType {
@@ -205,8 +232,43 @@ extension OPA.Controller {
                 } else {
                     error = nil
                 }
-                return OPA.Errcase.requestFailed.d(msg ?? "OPA 返回非预期状态码: \(res.status)", category: category).subErr(error)
+                return OPA.Errcase.requestFailed.d(msg ?? "OPA 返回非预期状态码", category: category).subErr(error).metadata(["status": .stringConvertible(res.status)])
             }
         }
+    }
+}
+
+extension HTTPClient.Request: @retroactive Loggerable {
+    public var logDescription: String {
+        let urlPath = url.path.isEmpty ? "/" : url.path
+        let query = url.query.map { "?\($0)" } ?? ""
+        
+        let headerCount = headers.count
+        
+        let bodySummary: String
+        if let body = self.body {
+            if let size = body.contentLength {
+                bodySummary = "body=\(size)bytes"
+            } else {
+                bodySummary = "body=exists"
+            }
+        } else {
+            bodySummary = "body=none"
+        }
+        
+        return "\(method) \(urlPath)\(query) [Headers:\(headerCount)] body=\(bodySummary)"
+    }
+}
+
+extension HTTPClient.Response: @retroactive Loggerable {
+    public var logDescription: String {
+        let statusStr = "\(status.code) \(status.reasonPhrase)"
+        
+        let headerCount = headers.count
+        
+        let bodySize = body?.readableBytes ?? 0
+        let bodySummary = bodySize > 0 ? "\(bodySize)bytes" : "empty"
+        
+        return "\(statusStr) [Headers:\(headerCount)] body=\(bodySummary)"
     }
 }

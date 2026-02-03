@@ -2,6 +2,7 @@ import NIOCore
 import NIOAdvanced
 import Foundation
 import ErrorHandle
+import Logging
 @preconcurrency import AnyCodable
 
 public extension OPA {
@@ -10,9 +11,11 @@ public extension OPA {
     /// 负责管理 OPA 中的数据（Base Documents），支持 CRUD 操作。
     final class DataController: Controller {
         public let argument: OPA.ConnectionArgument
+        public let logger: Logger
         
-        init(argument: OPA.ConnectionArgument) {
+        init(argument: OPA.ConnectionArgument, logger: Logger) {
             self.argument = argument
+            self.logger = logger
         }
         
         /// 创建或覆盖文档
@@ -29,7 +32,12 @@ public extension OPA {
             data: T,
             parameter: SaveQueryParameter = .init()
         ) -> EventLoopRes<Bool, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Data Save 操作", metadata: ["path": .string(path)])
+            logger.debug("操作参数", metadata: ["parameter": .data(parameter)])
+            
+            return send(
                 uri: "/v1/data" + path,
                 queries: parameter.queryItems,
                 method: .PUT,
@@ -37,15 +45,18 @@ public extension OPA {
                     "If-None-Match": ifNoneMatch!
                 ],
                 body: data,
+                logger: logger,
                 validStatusCode: [.noContent, .notModified],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .notFound: ("路径未找到 - save \(path)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).map { res in
-                res.status == .noContent
-            }
+            ).flatMapThrowing { res in
+                let r = res.status == .noContent
+                logger.info("Data Save 操作执行完成", metadata: ["result": .stringConvertible(r)])
+                return r
+            }.logIfFail(logger: logger)
         }
         
         /// 删除文档
@@ -58,16 +69,24 @@ public extension OPA {
             of path: String,
             parameter: DeleteQueryParameter = .init()
         ) -> EventLoopRes<Void, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Data Delete 操作", metadata: ["path": .string(path)])
+            logger.debug("操作参数", metadata: ["parameter": .data(parameter)])
+            
+            return send(
                 uri: "/v1/data" + path,
                 queries: parameter.queryItems,
                 method: .DELETE,
+                logger: logger,
                 validStatusCode: [.noContent],
                 errorStatusCode: [
                     .notFound: ("路径未找到 - delete \(path)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).map { _ in }
+            ).flatMapThrowing { _ in
+                logger.info("Data Delete 操作执行完成")
+            }.logIfFail(logger: logger)
         }
         
         /// 更新文档 (Patch)
@@ -76,26 +95,34 @@ public extension OPA {
         ///
         /// - Parameters:
         ///   - path: 数据路径
-        ///   - data: Patch 操作列表
+        ///   - operations: Patch 操作列表
         /// - Returns: 无返回值
         public func patch(
             to path: String,
-            data: [PatchOperation]
+            operations: [PatchOperation]
         ) -> EventLoopRes<Void, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Data Patch 操作", metadata: ["path": .string(path)])
+            logger.debug("操作参数", metadata: ["operations": .data(operations)])
+            
+            return send(
                 uri: "/v1/data" + path,
                 method: .PATCH,
                 extraHeaders: [
                     "Content-Type": "application/json-patch+json"
                 ],
-                body: data,
+                body: operations,
+                logger: logger,
                 validStatusCode: [.noContent],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .notFound: ("路径未找到 - patch \(path)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).map { _ in }
+            ).flatMapThrowing { _ in
+                logger.info("Data Patch 操作执行完成")
+            }.logIfFail(logger: logger)
         }
         
         /// 获取所有数据
@@ -129,20 +156,29 @@ public extension OPA {
             as type: G.Type = G.self,
             parameter: GetQueryParameter = .init()
         ) -> EventLoopRes<Answer<G>?, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Data Get 查询", metadata: ["path": .string(path)])
+            logger.debug("操作参数", metadata: ["parameter": .data(parameter)])
+            
+            return send(
                 uri: "/v1/data" + path,
                 queries: parameter.queryItems,
                 method: .POST,
                 body: [
                     "input": AnyCodable([:])
                 ],
+                logger: logger,
                 validStatusCode: [.ok],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                try? res.json().get()
+                let r = try? res.json(as: Answer<G>.self).get()
+                logger.debug("取得查询结果", metadata: ["result":r == nil ? "nil" : "\(r!)"])
+                logger.info("Data Get 查询执行完成")
+                return r
             }
         }
     }

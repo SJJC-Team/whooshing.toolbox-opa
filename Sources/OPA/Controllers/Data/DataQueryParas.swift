@@ -1,3 +1,5 @@
+import LoggingAdvanced
+
 public extension OPA.DataController {
     /// 数据获取参数
     struct GetQueryParameter: OPA.QueryParameter {
@@ -52,5 +54,17 @@ public extension OPA.DataController {
         ) {
             self.metrics = metrics
         }
+    }
+}
+
+extension OPA.DataController.GetQueryParameter: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "pretty=\(pretty), provenance=\(provenance), explain=\(explain.rawValue), metrics=\(metrics), instrument=\(instrument), strictBuiltinErrors=\(strictBuiltinErrors)"
+    }
+}
+
+extension OPA.DataController.SaveQueryParameter: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "metrics=\(metrics)"
     }
 }

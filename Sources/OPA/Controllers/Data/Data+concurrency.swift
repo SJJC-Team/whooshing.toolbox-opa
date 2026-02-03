@@ -25,11 +25,11 @@ public extension OPA.DataController {
     
     func patch(
         to path: String,
-        data: [OPA.PatchOperation]
+        operations: [OPA.PatchOperation]
     ) async throws(OPA.Errcase.ErrType) -> Void {
         try await patch(
             to: path,
-            data: data
+            operations: operations
         ).get()
     }
     

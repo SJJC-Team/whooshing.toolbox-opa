@@ -3,6 +3,8 @@ import NIOCore
 import NIOPosix
 import NIO
 import Foundation
+import Logging
+import LoggingAdvanced
 @testable import OPA
 @preconcurrency import AnyCodable
 
@@ -28,13 +30,20 @@ struct TestingShared {
             return opa
         }
         
+        var factory = LoggingFactory()
+        factory.add("Console")
+        factory.bootstrap()
+        
         let pool = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         
+        var logger = Logger(label: "OPA-Testing")
+        logger.logLevel = .trace
+        
         let o = OPA(argument: .init(
+            eventLoop: pool.next(),
             host: host,
             port: port,
-            eventLoop: pool.next(),
-            logger: .init(label: "OPA-Testing"),
+            logger: logger,
             proxy: try isPortOpen(host: "localhost", port: 9090) ? .server(host: "localhost", port: 9090) : nil
         ))
         

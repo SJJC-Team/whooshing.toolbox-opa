@@ -2,6 +2,7 @@ import NIOCore
 import NIOAdvanced
 import Foundation
 import ErrorHandle
+import Logging
 
 public extension OPA {
     /// 策略控制器
@@ -9,9 +10,11 @@ public extension OPA {
     /// 负责管理 OPA 中的策略模块（Policy Modules），支持增删改查。
     final class PolicyController: Controller {
         public let argument: OPA.ConnectionArgument
+        public let logger: Logger
         
-        init(argument: OPA.ConnectionArgument) {
+        init(argument: OPA.ConnectionArgument, logger: Logger) {
             self.argument = argument
+            self.logger = logger
         }
         
         /// 创建或更新策略
@@ -26,16 +29,24 @@ public extension OPA {
             content: String,
             parameter: SaveQueryParameter = .init()
         ) -> EventLoopRes<Void, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Policy Save 操作", metadata: ["id": .string(id)])
+            logger.debug("操作参数", metadata: ["content": .string(content), "parameter": .data(parameter)])
+            
+            return send(
                 uri: "/v1/policies/\(id)",
                 queries: parameter.queryItems,
                 method: .PUT,
                 body: content,
+                logger: logger,
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).map { _ in }
+            ).flatMapThrowing { _ in
+                logger.info("Policy Save 操作执行完成")
+            }.logIfFail(logger: logger)
         }
         
         /// 删除策略
@@ -48,16 +59,24 @@ public extension OPA {
             of id: String,
             parameter: DeleteQueryParameter = .init()
         ) -> EventLoopRes<Void, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Policy Delete 操作", metadata: ["id": .string(id)])
+            logger.debug("操作参数", metadata: ["parameter": .data(parameter)])
+            
+            return send(
                 uri: "/v1/policies/\(id)",
                 queries: parameter.queryItems,
                 method: .DELETE,
+                logger: logger,
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .notFound: ("路径未找到 - delete \(id)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).map { _ in }
+            ).flatMapThrowing { _ in
+                logger.info("Policy Delete 操作执行完成")
+            }.logIfFail(logger: logger)
         }
         
         /// 策略模块结果
@@ -85,10 +104,16 @@ public extension OPA {
             as type: T.Type = T.self,
             parameter: GetQueryParameter = .init()
         ) -> EventLoopRes<PolicyAnswer<T>?, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Policy Get 查询", metadata: ["id": .string(id)])
+            logger.debug("操作参数", metadata: ["parameter": .data(parameter)])
+            
+            return send(
                 uri: "/v1/policies/\(id)",
                 queries: parameter.queryItems,
                 method: .GET,
+                logger: logger,
                 validStatusCode: [.ok, .notFound],
                 errorStatusCode: [
                     .internalServerError: ("服务器未知错误", .internal)
@@ -102,7 +127,11 @@ public extension OPA {
                     try res.json(as: PolicyAnswer<T>.self).get()
                 }
                 return wrapped
-            }
+            }.flatMapThrowing { (res: PolicyAnswer<T>?) in
+                logger.debug("取得查询结果", metadata: ["result": res == nil ? "nil" : "\(res!)"])
+                logger.info("Policy Get 查询执行完成")
+                return res
+            }.logIfFail(logger: logger)
         }
         
         /// 列出所有策略
@@ -112,9 +141,14 @@ public extension OPA {
         public func list<T: Decodable & Sendable>(
             as type: T.Type = T.self
         ) -> EventLoopRes<Answer<[PolicyResult<T>]>, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Policy List 查询")
+            
+            return send(
                 uri: "/v1/policies",
                 method: .GET,
+                logger: logger,
                 errorStatusCode: [
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
@@ -123,7 +157,11 @@ public extension OPA {
                     try res.json(as: Answer<[PolicyResult<T>]>.self).get()
                 }
                 return wrapped
-            }
+            }.flatMapThrowing { (res: Answer<[PolicyResult<T>]>) in
+                logger.debug("取得查询结果", metadata: ["result": "\(res)"])
+                logger.info("Policy List 查询执行完成")
+                return res
+            }.logIfFail(logger: logger)
         }
     }
 }

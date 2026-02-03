@@ -1,3 +1,5 @@
+import LoggingAdvanced
+
 public extension OPA.CompileController {
     /// 部分求值选项
     struct PartialOption: Codable, Sendable {
@@ -195,5 +197,31 @@ public extension OPA.CompileController {
             .sql(.postgresql),
             .sql(.sqlite)
         ]
+    }
+}
+
+extension OPA.CompileController.PartialOption: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "disableInlining=\(disableInlining ?? []), nondeterminsticBuiltins=\(nondeterminsticBuiltins)"
+    }
+}
+
+extension OPA.CompileController.MultiTargetDataFilterOption: Loggerable, CustomStringConvertible {
+    public var description: String {
+        let dialects = targetDialects.map { $0.subValue }
+        return "dialects=\(dialects), disableInlining=\(disableInlining), maskRule=\(maskRule ?? "none"), sqlMappings=\(targetSQLTableMappings)"
+    }
+}
+
+extension OPA.CompileController.UCASTTargetDataFilterOption: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "disableInlining=\(disableInlining), maskRule=\(maskRule ?? "none")"
+    }
+}
+
+extension OPA.CompileController.SQLTargetDataFilterOption: Loggerable, CustomStringConvertible {
+    public var description: String {
+        let dialect = sqlDialect?.rawValue ?? "unknown"
+        return "dialect=\(dialect), disableInlining=\(disableInlining), maskRule=\(maskRule ?? "none"), tableMapping=\(tableMapping)"
     }
 }

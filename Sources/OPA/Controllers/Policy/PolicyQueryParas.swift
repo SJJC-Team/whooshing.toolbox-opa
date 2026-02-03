@@ -1,3 +1,5 @@
+import LoggingAdvanced
+
 public extension OPA.PolicyController {
     /// 策略获取参数
     struct GetQueryParameter: OPA.QueryParameter {
@@ -27,5 +29,17 @@ public extension OPA.PolicyController {
             self.pretty = pretty
             self.metrics = metrics
         }
+    }
+}
+
+extension OPA.PolicyController.GetQueryParameter: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "pretty=\(pretty)"
+    }
+}
+
+extension OPA.PolicyController.SaveQueryParameter: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "pretty=\(pretty), metrics=\(metrics)"
     }
 }

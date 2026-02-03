@@ -1,3 +1,5 @@
+import LoggingAdvanced
+
 public extension OPA.CompileController {
     /// 编译查询参数
     struct QueryParameter: OPA.QueryParameter {
@@ -21,5 +23,11 @@ public extension OPA.CompileController {
             self.metrics = metrics
             self.instrument = instrument
         }
+    }
+}
+
+extension OPA.CompileController.QueryParameter: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "pretty=\(pretty), explain=\(explain.rawValue), metrics=\(metrics), instrument=\(instrument)"
     }
 }

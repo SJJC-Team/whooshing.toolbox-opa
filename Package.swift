@@ -17,7 +17,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.3"),
-        .package(url: "https://github.com/SJJC-Team/whooshing.toolbox-basic.git", .upToNextMajor(from: "1.4.7")),
+        .package(url: "https://github.com/SJJC-Team/whooshing.toolbox-basic.git", from: "1.4.9"),
+//        .package(path: "/Users/clwang/GitHub/whooshing.toolbox-basic"),
         .package(url: "https://github.com/Flight-School/AnyCodable", from: "0.6.0")
     ],
     targets: [
@@ -28,6 +29,7 @@ let package = Package(
                 .product(name: "ErrorHandle", package: "whooshing.toolbox-basic"),
                 .product(name: "NIOAdvanced", package: "whooshing.toolbox-basic"),
                 .product(name: "DataConvertable", package: "whooshing.toolbox-basic"),
+                .product(name: "LoggingAdvanced", package: "whooshing.toolbox-basic"),
                 .product(name: "AnyCodable", package: "AnyCodable")
             ]
         ),

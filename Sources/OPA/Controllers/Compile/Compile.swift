@@ -2,6 +2,8 @@ import NIOCore
 import NIOAdvanced
 import ErrorHandle
 import Foundation
+import Logging
+import LoggingAdvanced
 @preconcurrency import AnyCodable
 
 public extension OPA {
@@ -10,9 +12,11 @@ public extension OPA {
     /// 负责与 OPA 的 Compile API 进行交互，支持部分求值（Partial Evaluation）和数据过滤（Data Filtering）。
     final class CompileController: Controller {
         public let argument: OPA.ConnectionArgument
+        public let logger: Logger
         
-        init(argument: OPA.ConnectionArgument) {
+        init(argument: OPA.ConnectionArgument, logger: Logger) {
             self.argument = argument
+            self.logger = logger
         }
         
         /// 执行部分求值 (Partial Evaluation)
@@ -39,7 +43,17 @@ public extension OPA {
             as type: T.Type = PartialResult.self,
             parameter: QueryParameter = .init()
         ) -> EventLoopRes<Answer<T>, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Compile Partial 查询", metadata: ["query": .string(query),])
+            logger.debug("查询参数", metadata: [
+                "input": input == nil ? "nil" : "\(input!)",
+                "options": .data(options),
+                "unknowns": .data(unknowns),
+                "parameter": .data(parameter)
+            ])
+            
+            return send(
                 uri: "/v1/compile",
                 queries: parameter.queryItems,
                 method: .POST,
@@ -50,6 +64,7 @@ public extension OPA {
                     "options": AnyCodable(options),
                     "unknowns": AnyCodable(unknowns)
                 ],
+                logger: logger,
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .internalServerError: ("服务器未知错误", .internal)
@@ -58,7 +73,11 @@ public extension OPA {
                 try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<T>.self)) 失败", category: .internal) {
                     try res.json().get()
                 }
-            }
+            }.flatMapThrowing { (res: Answer<T>) in
+                logger.debug("取得查询结果", metadata: ["result": "\(res)"])
+                logger.info("Compile Partial 查询执行完成")
+                return res
+            }.logIfFail(logger: logger)
         }
         
         /// 执行基于 UCAST 目标的数据过滤
@@ -86,7 +105,8 @@ public extension OPA {
                 input: input,
                 accept: target.value,
                 options: options,
-                unknowns: unknowns
+                unknowns: unknowns,
+                opName: "UCAST"
             )
         }
         
@@ -120,7 +140,8 @@ public extension OPA {
                 input: input,
                 accept: target.value,
                 options: options.set(sqlDialect: target),
-                unknowns: unknowns
+                unknowns: unknowns,
+                opName: "SQL"
             )
         }
         
@@ -152,23 +173,35 @@ public extension OPA {
                 input: input,
                 accept: "application/vnd.opa.multitarget+json",
                 options: options,
-                unknowns: unknowns
+                unknowns: unknowns,
+                opName: "MultiTarget"
             )
         }
         
         func __dataFilter<
             G: Encodable & Sendable,
             T: Decodable & Sendable,
-            F: Encodable & Sendable
+            F: Encodable & Sendable & Loggerable
         >(
             path: String,
             input: G,
             accept: String,
             options: F,
             unknowns: [String],
-            parameter: QueryParameter = .init()
+            parameter: QueryParameter = .init(),
+            opName: String
         ) -> EventLoopRes<Answer<T>, Errcase> {
-            send(
+            let logger = getRequestLogger()
+            
+            logger.info("执行 Compile \(opName) DataFilter 查询", metadata: ["path": .string(path),])
+            logger.debug("查询参数", metadata: [
+                "input": "\(input)",
+                "options": .data(options),
+                "unknowns": .data(unknowns),
+                "parameter": .data(parameter)
+            ])
+            
+            return send(
                 uri: "/v1/compile" + path,
                 queries: parameter.queryItems,
                 method: .POST,
@@ -180,6 +213,7 @@ public extension OPA {
                     "options": AnyCodable(options),
                     "unknowns": AnyCodable(unknowns)
                 ],
+                logger: logger,
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .notFound: ("路径未找到 - data_filter \(path)", .external),
@@ -189,7 +223,11 @@ public extension OPA {
                 try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<T>.self)) 失败", category: .internal) {
                     try res.json(accept: accept).get()
                 }
-            }
+            }.flatMapThrowing { (res: Answer<T>) in
+                logger.info("取得查询结果", metadata: ["result": "\(res)"])
+                logger.info("Compile \(opName) DataFilter 查询执行完成")
+                return res
+            }.logIfFail(logger: logger)
         }
     }
 }

@@ -176,7 +176,7 @@ struct OPADataTesting {
         let res = try await opa.data.save(on: path, ifNoneMatch: nil, data: data)
         #expect(res == true)
         
-        try await opa.data.patch(to: path, data: patchOperation)
+        try await opa.data.patch(to: path, operations: patchOperation)
         
         let dataTest = try #require(try await opa.data.get(from: pathNew, as: [String: AnyCodable].self))
         #expect(dataNew == dataTest.result)
@@ -196,7 +196,7 @@ struct OPADataTesting {
         let res = try await opa.data.save(on: path, ifNoneMatch: nil, data: data)
         #expect(res == true)
         
-        try await opa.data.patch(to: path, data: patchOperation)
+        try await opa.data.patch(to: path, operations: patchOperation)
         
         let dataTest = try #require(try await opa.data.get(from: pathNew, as: [String: AnyCodable].self))
         #expect(dataNew == dataTest.result)

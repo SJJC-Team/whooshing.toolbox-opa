@@ -1,12 +1,12 @@
+import LoggingAdvanced
+
 public extension OPA.QueryController {
     /// 简单查询参数
     struct SimpleQueryParameter: OPA.QueryParameter {
         /// 是否美化输出
         public let pretty: Bool
         
-        public init(
-            pretty: Bool = false
-        ) {
+        public init(pretty: Bool = false) {
             self.pretty = pretty
         }
     }
@@ -70,5 +70,23 @@ public extension OPA.QueryController {
             self.explain = explain
             self.metrics = metrics
         }
+    }
+}
+
+extension OPA.QueryController.SimpleQueryParameter: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "pretty=\(pretty)"
+    }
+}
+
+extension OPA.QueryController.DataQueryParameter: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "pretty=\(pretty), provenance=\(provenance), explain=\(explain.rawValue), metrics=\(metrics), instrument=\(instrument), strictBuiltinErrors=\(strictBuiltinErrors)"
+    }
+}
+
+extension OPA.QueryController.AdhocQueryParameter: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "pretty=\(pretty), explain=\(explain.rawValue), metrics=\(metrics)"
     }
 }
