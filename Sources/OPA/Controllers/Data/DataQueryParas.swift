@@ -3,17 +3,17 @@ import LoggingAdvanced
 public extension OPA.DataController {
     /// 数据获取参数
     struct GetQueryParameter: OPA.QueryParameter {
-        /// 是否美化输出
+        /// 是否美化输出 (Pretty Print)
         public let pretty: Bool
-        /// 是否返回来源信息
+        /// 是否返回来源信息 (Provenance)
         public let provenance: Bool
-        /// 决策解释级别
+        /// 决策解释级别 (Trace)
         public let explain: OPA.Explain
-        /// 是否返回性能指标
+        /// 是否返回性能指标 (Metrics)
         public let metrics: Bool
-        /// 是否开启性能检测
+        /// 是否开启性能检测 (Instrument)
         public let instrument: Bool
-        /// 是否对内建函数错误严格处理
+        /// 是否对内建函数错误严格处理 (Strict Built-in Errors)
         public let strictBuiltinErrors: Bool
         
         enum CodingKeys: String, CodingKey {

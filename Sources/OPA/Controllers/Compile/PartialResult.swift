@@ -84,7 +84,21 @@ public extension OPA.CompileController {
 
     /// 表达式项类型
     enum TermType: Sendable, Codable, CustomStringConvertible {
-        case ref, `var`, number, string, bool, array, object
+        /// 引用 (Ref)
+        case ref
+        /// 变量 (Var)
+        case `var`
+        /// 数字 (Number)
+        case number
+        /// 字符串 (String)
+        case string
+        /// 布尔值 (Bool)
+        case bool
+        /// 数组 (Array)
+        case array
+        /// 对象 (Object)
+        case object
+        /// 未知类型 (Unknown)
         case unknown(String)
         
         public init(from decoder: any Decoder) throws {
@@ -126,16 +140,18 @@ public extension OPA.CompileController {
     }
 
     /// 表达式项值
+    ///
+    /// 表示 Rego 表达式中具体的值。
     enum TermValue: Sendable, CustomStringConvertible {
-        /// 静态值
+        /// 静态值 (常量), 包含数字、字符串、布尔值等
         case value(AnyCodable)
-        /// 引用
+        /// 引用值, 指向变量或数据路径
         indirect case ref([Term])
-        /// 数组
+        /// 数组值, 包含一组 Term
         indirect case array([Term])
-        /// 空值
+        /// 空值 (null)
         case null
-        /// 未知值
+        /// 未知值 (当解析失败或类型未知时使用)
         case unknown
         
         public var description: String {

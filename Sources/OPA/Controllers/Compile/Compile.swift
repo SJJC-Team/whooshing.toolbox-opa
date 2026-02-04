@@ -190,6 +190,7 @@ public extension OPA {
             )
         }
         
+        // 内部通用 DataFilter 实现
         func __dataFilter<
             G: Encodable & Sendable,
             T: Decodable & Sendable,

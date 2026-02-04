@@ -13,12 +13,21 @@ public extension OPA {
         /// 警告信息列表
         public let warnings: [Warning]?
         /// 决策 ID (用于审计和追踪)
+        ///
+        /// 每个决策请求的唯一标识符。如果请求中包含 `provenance=true`，则此字段对于追踪决策来源非常有用。
         public let decisionId: String?
         /// 性能度量指标
+        ///
+        /// 包含详细的性能计时器、计数器等信息。需要请求参数中 `metrics=true`。
         public let metrics: Metrics?
         /// 解释信息 (仅当请求中启用了 explain 时存在)
+        ///
+        /// 包含决策过程的详细解释，用于调试为什么决策结果是 true 或 false。
         public let explanation: [AnyCodable]?
         
+        /// 来源信息 (Provenance)
+        ///
+        /// 包含构建时的版本、提交信息、时间戳以及加载的 bundle 信息。
         public let provenance: Provenance?
 
         enum CodingKeys: String, CodingKey {

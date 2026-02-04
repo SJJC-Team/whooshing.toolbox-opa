@@ -13,17 +13,25 @@ public extension OPA.QueryController {
     
     /// 数据查询参数
     struct DataQueryParameter: OPA.QueryParameter {
-        /// 是否美化输出
+        /// 是否美化输出 (Pretty Print)
         public let pretty: Bool
-        /// 是否返回来源信息
+        /// 是否返回来源信息 (Provenance)
+        ///
+        /// 如果为 true，响应中将包含 `provenance` 字段，显示构建版本等信息。
         public let provenance: Bool
         /// 解释级别
+        ///
+        /// 控制返回的解释信息的详细程度 (Trace)。
         public let explain: OPA.Explain
-        /// 是否返回性能指标
+        /// 是否返回性能指标 (Metrics)
         public let metrics: Bool
-        /// 是否开启性能检测
+        /// 是否开启性能检测 (Instrument)
+        ///
+        /// 启用后，响应中将包含更详细的直方图统计数据。
         public let instrument: Bool
         /// 是否严格处理内建函数错误
+        ///
+        /// 如果为 true，当内建函数发生错误时，将直接返回错误而不是 undefined。
         public let strictBuiltinErrors: Bool
         
         enum CodingKeys: String, CodingKey {

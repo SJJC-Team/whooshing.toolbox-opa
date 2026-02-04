@@ -5,30 +5,55 @@ import LoggingAdvanced
 import NIOAdvanced
 import AsyncHTTPClient
 
-/// OPA 客户端
+/// Open Policy Agent (OPA) 客户端
 ///
-/// 用于与 Open Policy Agent 服务器进行交互的主要入口类。
-/// 提供了对 Policy, Data, Query 和 Compile API 的访问控制器。
+/// `OPA` 类是与 Open Policy Agent 服务器进行交互的主要入口点。
+/// 它封装了 HTTP 客户端，并提供了对 OPA 各个功能模块（Policy, Data, Query, Compile）的访问控制器。
 ///
-/// 准备 OPA 客户端实例：
+/// 使用示例：
+/// ```swift
+/// let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+/// let logger = Logger(label: "opa-client")
+///
+/// let connectionArg = OPA.ConnectionArgument(
+///     eventLoop: eventLoopGroup.next(),
+///     host: "localhost",
+///     port: 8181,
+///     logger: logger
+/// )
+///
+/// let opa = OPA(argument: connectionArg)
+/// ```
 public final class OPA: Sendable {
     
-    /// 连接参数
+    /// 连接参数配置，包含 Host, Port, EventLoop 等信息
     public let argument: ConnectionArgument
     
-    /// 策略控制器: 管理 Policy Modules (.rego 文件)
+    /// 策略控制器
+    ///
+    ///用于管理 Policy Modules (.rego 文件)，提供增删改查功能。
     public let policy: PolicyController
-    /// 数据控制器: 管理 Base Documents (JSON 数据)
+    
+    /// 数据控制器
+    ///
+    /// 用于管理 Base Documents (JSON 数据)，提供增删改查功能。
     public let data: DataController
-    /// 查询控制器: 执行 Rego 查询
+    
+    /// 查询控制器
+    ///
+    /// 用于执行 Rego 查询，支持 Simple Query, Data Query 和 Ad-hoc Query。
     public let query: QueryController
-    /// 编译控制器: 执行部分求值和编译
+    
+    /// 编译控制器
+    ///
+    /// 用于执行 Compile API 操作，例如部分求值 (Partial Evaluation) 和数据过滤 (Data Filtering)。
     public let compile: CompileController
     
     var logger: Logger { argument.logger }
     
     /// 初始化 OPA 客户端
-    /// - Parameter argument: 连接参数
+    ///
+    /// - Parameter argument: 连接参数配置对象 `ConnectionArgument`
     public init(
         argument: ConnectionArgument
     ) {

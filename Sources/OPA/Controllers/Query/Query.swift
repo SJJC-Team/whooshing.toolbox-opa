@@ -119,14 +119,15 @@ public extension OPA {
         
         /// Ad-hoc 查询
         ///
-        /// 执行任意的 Rego 查询语句（例如 `data.authz.allow == true`）。
+        /// 允许客户端发送任意的 Rego 查询语句并在 OPA 上执行，而无需在服务器上预先保存策略。
+        /// 适用于动态生成查询或调试目的。
         ///
         /// - Parameters:
-        ///   - query: Rego 查询语句
-        ///   - input: 输入数据
-        ///   - type: 结果类型
-        ///   - parameter: 查询参数
-        /// - Returns: 包含结果的 Answer
+        ///   - query: Rego 查询语句 (例如: `data.authz.allow == true`)
+        ///   - input: 输入数据对象 (作为 `input` 全局变量在查询中使用)
+        ///   - type: 预期结果的数据类型
+        ///   - parameter: 查询配置参数
+        /// - Returns: `EventLoopRes<Answer<T?>, Errcase>` 包含查询结果的 Future 对象
         public func adhoc<
             G: Encodable & Sendable,
             T: Decodable & Sendable

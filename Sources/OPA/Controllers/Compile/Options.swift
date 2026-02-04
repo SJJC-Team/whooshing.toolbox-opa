@@ -142,16 +142,23 @@ public extension OPA.CompileController {
     }
    
     /// 编译目标方言
+    ///
+    /// 定义了 Compile API 可以输出的目标格式。
     enum TargetDialect: CaseIterable, Hashable, Sendable {
         /// UCAST (Universal Abstract Syntax Tree) 格式
         case ucast(UCAST)
         /// SQL 语句格式
         case sql(SQL)
         
+        /// UCAST 目标变体
         public enum UCAST: String, CaseIterable, Sendable {
+            /// 完整的 UCAST 结构
             case all = "all"
+            /// 最小化的 UCAST 结构 (推荐)
             case minimal = "minimal"
+            /// 针对 LINQ 的优化格式
             case linq = "linq"
+            /// 针对 Prisma 的优化格式
             case prisma = "prisma"
             
             var value: String {
@@ -163,10 +170,15 @@ public extension OPA.CompileController {
             }
         }
         
+        /// SQL 目标变体 (数据库方言)
         public enum SQL: String, Hashable, Codable, CaseIterable, Sendable {
+            /// Microsoft SQL Server
             case sqlserver = "sqlserver"
+            /// MySQL / MariaDB
             case mysql = "mysql"
+            /// PostgreSQL
             case postgresql = "postgresql"
+            /// SQLite
             case sqlite = "sqlite"
             
             var value: String {

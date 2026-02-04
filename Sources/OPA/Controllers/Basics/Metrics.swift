@@ -7,24 +7,43 @@ public extension OPA {
     /// OPA 性能度量指标
     struct Metrics: Decodable, Sendable {
         // --- 核心流程计时器 (Core Timers) ---
+        // --- 核心流程计时器 (Core Timers) ---
         /// 输入数据解析耗时 (ns)
-        let timerRegoInputParse: Int64?
+        ///
+        /// 解析 HTTP 请求 Body 中的 Input JSON 的时间。
+        public let timerRegoInputParse: Int64?
         /// 查询语句解析耗时 (ns)
-        let timerRegoQueryParse: Int64?
+        ///
+        /// 解析 URL 参数或 Body 中的 Rego 查询语句的时间。
+        public let timerRegoQueryParse: Int64?
         /// 查询编译耗时 (ns)
-        let timerRegoQueryCompile: Int64?
+        ///
+        /// 将解析后的 AST 编译为可执行规则的时间。
+        public let timerRegoQueryCompile: Int64?
         /// 查询评估/执行耗时 (ns)
-        let timerRegoQueryEval: Int64?
+        ///
+        /// *这是最重要的性能指标之一*，表示实际执行策略评估的时间。
+        public let timerRegoQueryEval: Int64?
         /// 模块解析耗时 (ns)
-        let timerRegoModuleParse: Int64?
+        ///
+        /// 解析 Policy Module (.rego 文件) 的时间。
+        public let timerRegoModuleParse: Int64?
         /// 模块编译耗时 (ns)
-        let timerRegoModuleCompile: Int64?
+        ///
+        /// 编译 Policy Module 的时间。
+        public let timerRegoModuleCompile: Int64?
         /// 服务器处理总耗时 (ns)
-        let timerServerHandler: Int64?
+        ///
+        /// 从收到请求到发送响应的总时间 (包括网络 IO 等)。
+        public let timerServerHandler: Int64?
         /// 外部引用解析耗时 (ns)
-        let timerRegoExternalResolve: Int64?
+        ///
+        /// 解析 Data 数据引用的时间。
+        public let timerRegoExternalResolve: Int64?
         /// 部分求值 (Partial Evaluation) 耗时 (ns)
-        let timerRegoPartialEval: Int64?
+        ///
+        /// 执行 Partial Query 的时间。
+        public let timerRegoPartialEval: Int64?
 
         // --- 编译转换计时器 (Compile/Translate Timers) - 新增遗漏项 ---
         /// 评估约束条件耗时 (ns)。
@@ -81,16 +100,25 @@ public extension OPA {
         let timerPartialOpSaveUnify: Int64?
 
         // --- 计数器 (Counters) ---
-        let counterServerQueryCacheHit: Int64?
-        let counterEvalOpBaseCacheMiss: Int64?
+        // --- 计数器 (Counters) ---
+        /// 服务器查询缓存命中次数
+        public let counterServerQueryCacheHit: Int64?
+        /// 基础缓存未命中次数 (Eval Op)
+        public let counterEvalOpBaseCacheMiss: Int64?
 
         // --- 直方图 (Instrument) ---
-        let histogramEvalOpPlug: Instrument?
-        let histogramEvalOpResolve: Instrument?
-        let histogramEvalOpRuleIndex: Instrument?
-        let histogramPartialOpCopyPropagation: Instrument?
-        let histogramPartialOpSaveSetContains: Instrument?
-        let histogramPartialOpSaveUnify: Instrument?
+        /// Eval Plug 操作耗时分布
+        public let histogramEvalOpPlug: Instrument?
+        /// Eval Resolve 操作耗时分布
+        public let histogramEvalOpResolve: Instrument?
+        /// Eval Rule Index 操作耗时分布
+        public let histogramEvalOpRuleIndex: Instrument?
+        /// Partial Copy Propagation 操作耗时分布
+        public let histogramPartialOpCopyPropagation: Instrument?
+        /// Partial Save Set Contains 操作耗时分布
+        public let histogramPartialOpSaveSetContains: Instrument?
+        /// Partial Save Unify 操作耗时分布
+        public let histogramPartialOpSaveUnify: Instrument?
 
         enum CodingKeys: String, CodingKey {
             case timerRegoInputParse = "timer_rego_input_parse_ns"

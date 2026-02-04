@@ -3,7 +3,7 @@ import LoggingAdvanced
 public extension OPA.PolicyController {
     /// 策略获取参数
     struct GetQueryParameter: OPA.QueryParameter {
-        /// 是否美化输出
+        /// 是否美化输出 (Pretty Print)
         public let pretty: Bool
         
         public init(
@@ -17,9 +17,9 @@ public extension OPA.PolicyController {
     
     /// 策略保存参数
     struct SaveQueryParameter: OPA.QueryParameter {
-        /// 是否美化输出
+        /// 是否美化输出 (Pretty Print)
         public let pretty: Bool
-        /// 是否返回性能指标
+        /// 是否返回性能指标 (Metrics)
         public let metrics: Bool
         
         public init(

@@ -13,11 +13,15 @@ public extension OPA {
     ///
     /// 所有 OPA 功能控制器都应遵守此协议，提供基础的连接参数。
     protocol Controller: Sendable, AnyObject {
+        /// OPA 连接参数
         var argument: OPA.ConnectionArgument { get }
+        /// 用于记录日志的 Logger 实例
         var logger: Logger { get }
     }
     
     /// HTTP 响应封装结构体
+    ///
+    /// 封装了底层的 HTTPClient.Response，提供便捷的方法来提取 Body 内容。
     struct Response: Sendable {
         private let res: HTTPClient.Response
         private let logger: Logger
@@ -27,8 +31,12 @@ public extension OPA {
             self.logger = logger
         }
         
+        /// 获取 HTTP 状态码
         var status: HTTPResponseStatus { res.status }
         
+        /// 尝试将响应体解析为纯文本字符串
+        ///
+        /// - Returns: `Res<String, OPA.Errcase>` 包含字符串结果或错误
         func plain() -> Res<String, OPA.Errcase> {
             logger.debug("从响应体中提取内容", metadata: ["contentType": "text/plain", "body": .string(res.body == nil ? "0" : "\(res.body!.readableBytes)bytes")])
             
@@ -52,6 +60,12 @@ public extension OPA {
             return .success(plain)
         }
         
+        /// 尝试将响应体解析为 JSON 对象
+        ///
+        /// - Parameters:
+        ///   - as: 目标类型
+        ///   - accept: 预期的 Content-Type，默认为 `application/json`
+        /// - Returns: `Res<T, OPA.Errcase>` 包含解码后的对象或错误
         func json<T>(
             as: T.Type = T.self,
             accept: String = "application/json"
