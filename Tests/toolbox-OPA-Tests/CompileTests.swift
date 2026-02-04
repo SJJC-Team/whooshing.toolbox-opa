@@ -452,6 +452,29 @@ struct OPACompileTesting {
         )
         #expect(try result(queryRes))
         
+        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.PartialResult>) -> Bool)](
+            arrayLiteral:
+            ("pretty 测试", .init(pretty: true), { _ in true }),
+            ("explain 测试", .init(explain: .full), { _ in true }),
+            ("metrics 测试", .init(metrics: true), { $0.metrics != nil }),
+            ("instrument 测试", .init(instrument: true), {
+                $0.metrics?.histogramEvalOpPlug != nil &&
+                $0.metrics?.histogramPartialOpSaveSetContains != nil
+            })
+        ) {
+            let dataOutput = try await opa.compile.partial(
+                query: query,
+                input: input,
+                options: options,
+                unknowns: unknowns,
+                parameter: key
+            )
+            
+            #expect(try result(dataOutput), .init(stringLiteral: name))
+            #expect(dataOutput.warnings == nil, .init(stringLiteral: name))
+            #expect(value(dataOutput), .init(stringLiteral: name))
+        }
+        
         try await TestingShared.clean(policies: policies)
     }
     
@@ -475,11 +498,34 @@ struct OPACompileTesting {
             input: input,
             target: target,
             options: options,
-            unknowns: unknowns,
+            unknowns: unknowns
         )
         #expect(try result(queryRes))
         
-        print(queryRes)
+        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.SQLTargetResult>) -> Bool)](
+            arrayLiteral:
+            ("pretty 测试", .init(pretty: true), { _ in true }),
+            ("explain 测试", .init(explain: .full), { _ in true }),
+            ("metrics 测试", .init(metrics: true), { $0.metrics != nil }),
+            ("instrument 测试", .init(instrument: true), {
+                $0.metrics?.timerCompileEvalConstraints != nil &&
+                $0.metrics?.timerCompilePrepPartial != nil &&
+                $0.metrics?.timerCompileTranslateQueries != nil
+            })
+        ) {
+            let dataOutput = try await opa.compile.sqlDataFilter(
+                path: path,
+                input: input,
+                target: target,
+                options: options,
+                unknowns: unknowns,
+                parameter: key
+            )
+            
+            #expect(try result(dataOutput), .init(stringLiteral: name))
+            #expect(dataOutput.warnings == nil, .init(stringLiteral: name))
+            #expect(value(dataOutput), .init(stringLiteral: name))
+        }
         
         try await TestingShared.clean(policies: policies)
     }
@@ -508,7 +554,26 @@ struct OPACompileTesting {
         )
         #expect(try result(queryRes))
         
-        print(queryRes)
+        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.UCASTTargetResult>) -> Bool)](
+            arrayLiteral:
+            ("pretty 测试", .init(pretty: true), { _ in true }),
+            ("explain 测试", .init(explain: .full), { _ in true }),
+            ("metrics 测试", .init(metrics: true), { $0.metrics != nil }),
+            ("instrument 测试", .init(instrument: true), { $0.metrics != nil })
+        ) {
+            let dataOutput = try await opa.compile.uCastDataFilter(
+                path: path,
+                input: input,
+                target: target,
+                options: options,
+                unknowns: unknowns,
+                parameter: key
+            )
+            
+            #expect(try result(dataOutput), .init(stringLiteral: name))
+            #expect(dataOutput.warnings == nil, .init(stringLiteral: name))
+            #expect(value(dataOutput), .init(stringLiteral: name))
+        }
         
         try await TestingShared.clean(policies: policies)
     }
@@ -535,7 +600,25 @@ struct OPACompileTesting {
         )
         #expect(try result(queryRes))
         
-        print(queryRes)
+        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.MultiTargetResult>) -> Bool)](
+            arrayLiteral:
+            ("pretty 测试", .init(pretty: true), { _ in true }),
+            ("explain 测试", .init(explain: .full), { _ in true }),
+            ("metrics 测试", .init(metrics: true), { $0.metrics != nil }),
+            ("instrument 测试", .init(instrument: true), { $0.metrics != nil })
+        ) {
+            let dataOutput = try await opa.compile.dataFilter(
+                path: path,
+                input: input,
+                options: options,
+                unknowns: unknowns,
+                parameter: key
+            )
+            
+            #expect(try result(dataOutput), .init(stringLiteral: name))
+            #expect(dataOutput.warnings == nil, .init(stringLiteral: name))
+            #expect(value(dataOutput), .init(stringLiteral: name))
+        }
         
         try await TestingShared.clean(policies: policies)
     }

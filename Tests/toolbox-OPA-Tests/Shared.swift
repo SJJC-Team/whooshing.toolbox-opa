@@ -23,6 +23,11 @@ struct TestingShared {
     
     @MainActor static var opa: OPA? = nil
     @MainActor static var testStage: TestStage = .data
+    @MainActor static let loggingSystem: Void = {
+        var factory = LoggingFactory()
+        factory.add("Console")
+        factory.bootstrap()
+    }()
     
     @MainActor
     static func getOPA() throws -> OPA {
@@ -30,9 +35,7 @@ struct TestingShared {
             return opa
         }
         
-        var factory = LoggingFactory()
-        factory.add("Console")
-        factory.bootstrap()
+        _ = loggingSystem
         
         let pool = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         
@@ -61,12 +64,12 @@ struct TestingShared {
         let opa = try await TestingShared.getOPA()
         
         for data in datas {
-            let res = try await opa.data.save(on: data.0, data: data.1).get()
-            #expect(res == true)
+            let res = try await opa.data.save(on: data.0, data: data.1)
+            #expect(res.result == true)
         }
         
         for policy in policies {
-            try await opa.policy.save(by: policy.0, content: policy.1).get()
+            try await opa.policy.save(by: policy.0, content: policy.1)
         }
     }
     
@@ -76,12 +79,12 @@ struct TestingShared {
         let opa = try await TestingShared.getOPA()
         
         for policy in policies {
-            try await opa.policy.delete(of: policy.0).get()
+            try await opa.policy.delete(of: policy.0)
         }
         
-        let datas = try await opa.data.list(as: DataType.self).get()
+        let datas = try await opa.data.list(as: DataType.self)
         for (k, _) in datas.result {
-            try await opa.data.delete(of: "/" + k).get()
+            try await opa.data.delete(of: "/" + k)
         }
     }
 }

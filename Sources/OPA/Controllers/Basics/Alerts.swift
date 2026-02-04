@@ -1,3 +1,5 @@
+import LoggingAdvanced
+
 public extension OPA {
     /// OPA 错误结构体
     ///
@@ -36,7 +38,7 @@ public extension OPA {
     }
 }
 
-extension OPA.Err: CustomStringConvertible {
+extension OPA.Err: Loggerable, CustomStringConvertible {
     public var description: String {
         desc(head: true)
     }
@@ -57,13 +59,9 @@ extension OPA.Err: CustomStringConvertible {
     }
 }
 
-extension OPA.Warning: CustomStringConvertible {
+extension OPA.Warning: Loggerable, CustomStringConvertible {
     public var description: String {
-        desc(head: true)
-    }
-    
-    public func desc(head: Bool) -> String {
-        var desc = (head ? "OPA.Warning: " : "") + "[\(code)] \(message)"
+        var desc = "[\(code)] \(message)"
         
         if let loc = location {
             desc += " AT: \(loc.file):\(loc.row):\(loc.col)"

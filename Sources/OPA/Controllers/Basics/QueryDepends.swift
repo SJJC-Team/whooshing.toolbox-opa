@@ -20,7 +20,7 @@ public extension OPA {
     /// 查询参数协议
     ///
     /// 用于将结构体转换为 URL 查询参数。
-    protocol QueryParameter: Codable, Sendable {
+    protocol QueryParameter: Codable, Hashable, Sendable {
         /// 转换为 URL 查询项列表
         var queryItems: [URLQueryItem] { get }
     }

@@ -1,10 +1,11 @@
 public extension OPA.DataController {
+    @discardableResult
     func save<T: Encodable & Sendable>(
         on path: String,
         ifNoneMatch: String? = "*",
         data: T,
         parameter: SaveQueryParameter = .init()
-    ) async throws(OPA.Errcase.ErrType) -> Bool {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<Bool> {
         try await save(
             on: path,
             ifNoneMatch: ifNoneMatch,
@@ -13,20 +14,22 @@ public extension OPA.DataController {
         ).get()
     }
     
+    @discardableResult
     func delete(
         of path: String,
         parameter: DeleteQueryParameter = .init()
-    ) async throws(OPA.Errcase.ErrType) -> Void {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<OPA.NULL> {
         try await delete(
             of: path,
             parameter: parameter
         ).get()
     }
     
+    @discardableResult
     func patch(
         to path: String,
         operations: [OPA.PatchOperation]
-    ) async throws(OPA.Errcase.ErrType) -> Void {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<OPA.NULL> {
         try await patch(
             to: path,
             operations: operations

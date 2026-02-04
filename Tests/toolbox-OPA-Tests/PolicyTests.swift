@@ -92,7 +92,12 @@ struct OPAPolicyTesting {
     func policyCreating(id: String, content: String) async throws {
         let opa = try await TestingShared.getOPA()
         
-        try await opa.policy.save(by: id, content: content)
+        let metrics = Bool.random()
+        let pretty = Bool.random()
+        let res = try await opa.policy.save(by: id, content: content, parameter: .init(pretty: pretty, metrics: metrics))
+        if metrics {
+            #expect(res.metrics != nil)
+        }
         
         let r = try #require(try await opa.policy.get(at: id, as: [String: AnyCodable].self))
         
@@ -118,9 +123,10 @@ struct OPAPolicyTesting {
             networks[m].public == tr
         }    
         """
-        
+        let metrics = Bool.random()
+        let pretty = Bool.random()
         await #expect(throws: OPA.Errcase.ErrType.self) {
-            try await opa.policy.save(by: "testing_id", content: content)
+            try await opa.policy.save(by: "testing_id", content: content, parameter: .init(pretty: pretty, metrics: metrics))
         }
     }
     
@@ -138,7 +144,14 @@ struct OPAPolicyTesting {
     func policyDelete(id: String) async throws {
         let opa = try await TestingShared.getOPA()
         
-        try await opa.policy.delete(of: id)
+        let parameter = OPA.PolicyController.DeleteQueryParameter(
+            pretty: .random(),
+            metrics: .random()
+        )
+        let deleteRes = try await opa.policy.delete(of: id, parameter: parameter)
+        if parameter.metrics {
+            #expect(deleteRes.metrics != nil)
+        }
         
         let res = try await opa.policy.get(at: id, as: [String: AnyCodable].self)
         #expect(res == nil)
@@ -164,5 +177,7 @@ struct OPAPolicyTesting {
     @Test("测试结束")
     func end() async throws {
         TestingShared.testStage = .query
+        try! await TestingShared.opa!.shutdown().get()
+        TestingShared.opa = nil
     }
 }

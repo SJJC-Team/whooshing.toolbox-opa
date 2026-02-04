@@ -92,20 +92,25 @@ public extension OPA {
         ///   - unknowns: 未知变量列表
         ///   - parameter: 查询参数
         /// - Returns: 包含 `UCASTTargetResult` 的结果
-        public func uCastDataFilter<G: Encodable & Sendable>(
+        public func uCastDataFilter<
+            G: Encodable & Sendable,
+            T: Decodable & Sendable
+        >(
             path: String,
             input: G,
             target: TargetDialect.UCAST,
             options: UCASTTargetDataFilterOption = .init(),
             unknowns: [String],
-            parameter: QueryParameter = .init()
-        ) -> EventLoopRes<Answer<UCASTTargetResult>, Errcase> {
+            parameter: QueryParameter = .init(),
+            as type: T.Type = UCASTTargetResult.self
+        ) -> EventLoopRes<Answer<T>, Errcase> {
             __dataFilter(
                 path: path,
                 input: input,
                 accept: target.value,
                 options: options,
                 unknowns: unknowns,
+                parameter: parameter,
                 opName: "UCAST"
             )
         }
@@ -141,6 +146,7 @@ public extension OPA {
                 accept: target.value,
                 options: options.set(sqlDialect: target),
                 unknowns: unknowns,
+                parameter: parameter,
                 opName: "SQL"
             )
         }
@@ -174,6 +180,7 @@ public extension OPA {
                 accept: "application/vnd.opa.multitarget+json",
                 options: options,
                 unknowns: unknowns,
+                parameter: parameter,
                 opName: "MultiTarget"
             )
         }

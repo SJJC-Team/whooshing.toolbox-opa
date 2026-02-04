@@ -11,5 +11,6 @@ public extension OPA {
         case badRequest = "请求不合法"
         case badResponse = "OPA 响应内容不匹配"
         case shutdownFailed = "OPA 终止失败"
+        case codableParseFailed = "Codable 解析失败"
     }
 }

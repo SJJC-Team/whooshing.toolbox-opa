@@ -3,6 +3,7 @@ import NIOAdvanced
 import Foundation
 import ErrorHandle
 import Logging
+@preconcurrency import AnyCodable
 
 public extension OPA {
     /// 策略控制器
@@ -28,7 +29,7 @@ public extension OPA {
             by id: String,
             content: String,
             parameter: SaveQueryParameter = .init()
-        ) -> EventLoopRes<Void, Errcase> {
+        ) -> EventLoopRes<Answer<NULL>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Policy Save 操作", metadata: ["id": .string(id)])
@@ -44,8 +45,13 @@ public extension OPA {
                     .badRequest: ("请求不合法", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).flatMapThrowing { _ in
+            ).flatMapThrowing { res throws(Errcase.ErrType) in
+                let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
+                
+                logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Policy Save 操作执行完成")
+                
+                return ans == nil ? .init(result: .init()) : ans!.set(result: NULL())
             }.logIfFail(logger: logger)
         }
         
@@ -58,7 +64,7 @@ public extension OPA {
         public func delete(
             of id: String,
             parameter: DeleteQueryParameter = .init()
-        ) -> EventLoopRes<Void, Errcase> {
+        ) -> EventLoopRes<Answer<NULL>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Policy Delete 操作", metadata: ["id": .string(id)])
@@ -74,8 +80,13 @@ public extension OPA {
                     .notFound: ("路径未找到 - delete \(id)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).flatMapThrowing { _ in
+            ).flatMapThrowing {res throws(Errcase.ErrType) in
+                let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
+                
+                logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Policy Delete 操作执行完成")
+                
+                return ans == nil ? .init(result: .init()) : ans!.set(result: NULL())
             }.logIfFail(logger: logger)
         }
         

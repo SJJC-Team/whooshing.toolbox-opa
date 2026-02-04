@@ -1,4 +1,5 @@
 import Foundation
+import LoggingAdvanced
 @preconcurrency import AnyCodable
 
 public extension OPA.CompileController {
@@ -35,35 +36,44 @@ public extension OPA.CompileController {
     }
 }
 
-extension OPA.CompileController.SQLTargetResult: CustomStringConvertible {
+// MARK: - SQLTargetResult Description
+extension OPA.CompileController.SQLTargetResult: Loggerable, CustomStringConvertible {
     public var description: String {
-        return "SQLTarget(\(query))"
+        """
+        sql_target:
+          query: \(query)
+        """
     }
 }
 
-extension OPA.CompileController.UCASTTargetResult: CustomStringConvertible {
+// MARK: - UCASTTargetResult Description
+extension OPA.CompileController.UCASTTargetResult: Loggerable, CustomStringConvertible {
     public var description: String {
-        return "UCASTTarget(\(query))"
+        """
+        ucast_target:
+          query: \(query)
+        """
     }
 }
 
-extension OPA.CompileController.MultiTargetResult: CustomStringConvertible {
+// MARK: - MultiTargetResult Description
+extension OPA.CompileController.MultiTargetResult: Loggerable, CustomStringConvertible {
     public var description: String {
-        var outputs: [String] = []
+        var lines: [String] = ["multi_target:"]
         
-        if let mysql = mysql { outputs.append("MySQL: \(mysql)") }
-        if let pg = postgresql { outputs.append("PostgreSQL: \(pg)") }
-        if let ss = sqlserver { outputs.append("SQLServer: \(ss)") }
-        if let lite = sqlite { outputs.append("SQLite: \(lite)") }
-        
-        if let ucast = ucast, !ucast.query.isEmpty {
-            outputs.append("uCAST: \(ucast.query.count) nodes")
+        // 内部辅助函数：处理包装后的 Value
+        func add<T>(_ label: String, _ value: Value<T>?) {
+            guard let value = value else { return }
+            lines.append("  \(label): \(value.query)")
         }
+
+        // 逐一检查并添加非空目标
+        add("ucast", ucast)
+        add("postgresql", postgresql)
+        add("mysql", mysql)
+        add("sqlserver", sqlserver)
+        add("sqlite", sqlite)
         
-        if outputs.isEmpty {
-            return "MultiTarget(empty)"
-        }
-        
-        return "MultiTarget(\n" + outputs.joined(separator: "\t\n") + "\n)"
+        return lines.joined(separator: "\n")
     }
 }

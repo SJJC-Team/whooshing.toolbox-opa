@@ -147,20 +147,36 @@ struct OPADataTesting {
     func dataCreating(path: String, data: [String: AnyCodable]) async throws {
         let opa = try await TestingShared.getOPA()
         
-        var res = try await opa.data.save(on: path, ifNoneMatch: nil, data: data)
-        #expect(res == true)
+        var res = try await opa.data.save(on: path, ifNoneMatch: nil, data: data, parameter: .init(metrics: true))
+        #expect(res.result == true)
+        #expect(res.metrics != nil)
         
         let dataOutput = try #require(try await opa.data.get(from: path, as: [String: AnyCodable].self))
         #expect(data == dataOutput.result)
         #expect(dataOutput.warnings == nil)
         
+        for (name, key, value) in [(String, OPA.DataController.GetQueryParameter, @Sendable (OPA.Answer<TestingShared.DataType>) -> Bool)](
+            arrayLiteral:
+            ("pretty 测试", .init(pretty: true), { _ in true }),
+            ("provenance 测试", .init(provenance: true), { $0.provenance != nil }),
+            ("explain 测试", .init(explain: .full), { _ in true }),
+            ("metrics 测试", .init(metrics: true), { $0.metrics != nil }),
+            ("instrument 测试", .init(instrument: true), { $0.metrics?.histogramEvalOpPlug != nil && $0.metrics?.histogramEvalOpResolve != nil }),
+            ("strictBuiltinErrors 测试", .init(strictBuiltinErrors: true), { _ in true }),
+        ) {
+            let dataOutput = try #require(try await opa.data.get(from: path, as: [String: AnyCodable].self, parameter: key), .init(stringLiteral: name))
+            #expect(data == dataOutput.result, .init(stringLiteral: name))
+            #expect(dataOutput.warnings == nil, .init(stringLiteral: name))
+            #expect(value(dataOutput), .init(stringLiteral: name))
+        }
+        
         // 尝试覆盖，应当失败
         res = try await opa.data.save(on: path, data: data)
-        #expect(res == false)
+        #expect(res.result == false)
         
         // 再次尝试覆盖，应当成功
         res = try await opa.data.save(on: path, ifNoneMatch: nil, data: data)
-        #expect(res == true)
+        #expect(res.result == true)
     }
     
     @Test("Patch 测试 1", .serialized, arguments: patchList)
@@ -174,7 +190,7 @@ struct OPADataTesting {
         let opa = try await TestingShared.getOPA()
         
         let res = try await opa.data.save(on: path, ifNoneMatch: nil, data: data)
-        #expect(res == true)
+        #expect(res.result == true)
         
         try await opa.data.patch(to: path, operations: patchOperation)
         
@@ -194,7 +210,7 @@ struct OPADataTesting {
         let opa = try await TestingShared.getOPA()
         
         let res = try await opa.data.save(on: path, ifNoneMatch: nil, data: data)
-        #expect(res == true)
+        #expect(res.result == true)
         
         try await opa.data.patch(to: path, operations: patchOperation)
         
@@ -214,7 +230,11 @@ struct OPADataTesting {
         let d = try await opa.data.get(from: path, as: [String: AnyCodable].self)
         #expect(d?.result == data)
         
-        try await opa.data.delete(of: path)
+        let metrics = Bool.random()
+        let res = try await opa.data.delete(of: path, parameter: .init(metrics: metrics))
+        if metrics {
+            #expect(res.metrics != nil)
+        }
     }
     
     @Test("Not Found 测试")
@@ -274,5 +294,7 @@ struct OPADataTesting {
     @Test("测试结束")
     func end() async throws {
         TestingShared.testStage = .policy
+        try! TestingShared.opa!.syncShutdown()
+        TestingShared.opa = nil
     }
 }

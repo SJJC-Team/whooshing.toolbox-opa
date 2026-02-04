@@ -20,21 +20,26 @@ public extension OPA.CompileController {
         ).get()
     }
     
-    func uCastDataFilter<G: Encodable & Sendable>(
+    func uCastDataFilter<
+        G: Encodable & Sendable,
+        T: Decodable & Sendable
+    >(
         path: String,
         input: G,
         target: TargetDialect.UCAST,
         options: UCASTTargetDataFilterOption = .init(),
         unknowns: [String],
-        parameter: QueryParameter = .init()
-    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<UCASTTargetResult> {
+        parameter: QueryParameter = .init(),
+        as type: T.Type = UCASTTargetResult.self
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<T> {
         try await uCastDataFilter(
             path: path,
             input: input,
             target: target,
             options: options,
             unknowns: unknowns,
-            parameter: parameter
+            parameter: parameter,
+            as: type
         ).get()
     }
     

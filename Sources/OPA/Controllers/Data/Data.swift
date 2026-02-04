@@ -31,7 +31,7 @@ public extension OPA {
             ifNoneMatch: String? = "*",
             data: T,
             parameter: SaveQueryParameter = .init()
-        ) -> EventLoopRes<Bool, Errcase> {
+        ) -> EventLoopRes<Answer<Bool>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Data Save 操作", metadata: ["path": .string(path)])
@@ -46,16 +46,22 @@ public extension OPA {
                 ],
                 body: data,
                 logger: logger,
-                validStatusCode: [.noContent, .notModified],
+                validStatusCode: [.ok, .noContent, .notModified],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .notFound: ("路径未找到 - save \(path)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).flatMapThrowing { res in
-                let r = res.status == .noContent
-                logger.info("Data Save 操作执行完成", metadata: ["result": .stringConvertible(r)])
-                return r
+            ).flatMapThrowing { res throws(Errcase.ErrType) in
+                let r = res.status != .notModified
+                
+                let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
+                
+                logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
+                logger.info("Data Save 操作执行完成", metadata: ["result": .data(r)])
+                
+                
+                return ans == nil ? .init(result: r) : ans!.set(result: r)
             }.logIfFail(logger: logger)
         }
         
@@ -68,7 +74,7 @@ public extension OPA {
         public func delete(
             of path: String,
             parameter: DeleteQueryParameter = .init()
-        ) -> EventLoopRes<Void, Errcase> {
+        ) -> EventLoopRes<Answer<NULL>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Data Delete 操作", metadata: ["path": .string(path)])
@@ -79,13 +85,18 @@ public extension OPA {
                 queries: parameter.queryItems,
                 method: .DELETE,
                 logger: logger,
-                validStatusCode: [.noContent],
+                validStatusCode: [.ok, .noContent],
                 errorStatusCode: [
                     .notFound: ("路径未找到 - delete \(path)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).flatMapThrowing { _ in
+            ).flatMapThrowing { res throws(Errcase.ErrType) in
+                let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
+                
+                logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Delete 操作执行完成")
+                
+                return ans == nil ? .init(result: .init()) : ans!.set(result: NULL())
             }.logIfFail(logger: logger)
         }
         
@@ -100,7 +111,7 @@ public extension OPA {
         public func patch(
             to path: String,
             operations: [PatchOperation]
-        ) -> EventLoopRes<Void, Errcase> {
+        ) -> EventLoopRes<Answer<NULL>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Data Patch 操作", metadata: ["path": .string(path)])
@@ -114,14 +125,19 @@ public extension OPA {
                 ],
                 body: operations,
                 logger: logger,
-                validStatusCode: [.noContent],
+                validStatusCode: [.ok, .noContent],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .notFound: ("路径未找到 - patch \(path)", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
-            ).flatMapThrowing { _ in
+            ).flatMapThrowing { res throws(Errcase.ErrType) in
+                let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
+                
+                logger.debug("Patch 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Patch 操作执行完成")
+                
+                return ans == nil ? .init(result: .init()) : ans!.set(result: NULL())
             }.logIfFail(logger: logger)
         }
         
@@ -176,10 +192,10 @@ public extension OPA {
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let r = try? res.json(as: Answer<G>.self).get()
-                logger.debug("取得查询结果", metadata: ["result":r == nil ? "nil" : "\(r!)"])
+                logger.debug("取得查询结果", metadata: ["result": r == nil ? "nil" : .data(r!)])
                 logger.info("Data Get 查询执行完成")
                 return r
-            }
+            }.logIfFail(logger: logger)
         }
     }
 }

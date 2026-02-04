@@ -1,9 +1,10 @@
 public extension OPA.PolicyController {
+    @discardableResult
     func save(
         by id: String,
         content: String,
         parameter: SaveQueryParameter = .init()
-    ) async throws(OPA.Errcase.ErrType) -> Void {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<OPA.NULL> {
         try await save(
             by: id,
             content: content,
@@ -11,10 +12,11 @@ public extension OPA.PolicyController {
         ).get()
     }
     
+    @discardableResult
     func delete(
         of id: String,
         parameter: DeleteQueryParameter = .init()
-    ) async throws(OPA.Errcase.ErrType) -> Void {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<OPA.NULL> {
         try await delete(
             of: id,
             parameter: parameter
