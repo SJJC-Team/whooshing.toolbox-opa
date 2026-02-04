@@ -57,9 +57,12 @@ public extension OPA {
                 
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
+                if let warns = ans?.warnings {
+                    logger.warnings("Save 操作警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
+                
                 logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Save 操作执行完成", metadata: ["result": .data(r)])
-                
                 
                 return ans == nil ? .init(result: r) : ans!.set(result: r)
             }.logIfFail(logger: logger)
@@ -92,6 +95,10 @@ public extension OPA {
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
+                
+                if let warns = ans?.warnings {
+                    logger.warnings("Delete 操作警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
                 
                 logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Delete 操作执行完成")
@@ -133,6 +140,10 @@ public extension OPA {
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
+                
+                if let warns = ans?.warnings {
+                    logger.warnings("Patch 操作警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
                 
                 logger.debug("Patch 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Patch 操作执行完成")
@@ -192,8 +203,14 @@ public extension OPA {
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let r = try? res.json(as: Answer<G>.self).get()
-                logger.debug("取得查询结果", metadata: ["result": r == nil ? "nil" : .data(r!)])
+                
+                if let warns = r?.warnings {
+                    logger.warnings("Get 查询警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
+                
+                logger.debug("查询结果", metadata: ["result": r == nil ? "nil" : .data(r!)])
                 logger.info("Data Get 查询执行完成")
+                
                 return r
             }.logIfFail(logger: logger)
         }

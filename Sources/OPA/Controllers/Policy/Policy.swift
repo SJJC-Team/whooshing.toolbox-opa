@@ -48,6 +48,10 @@ public extension OPA {
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
+                if let warns = ans?.warnings {
+                    logger.warnings("Save 操作警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
+                
                 logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Policy Save 操作执行完成")
                 
@@ -82,6 +86,10 @@ public extension OPA {
                 ]
             ).flatMapThrowing {res throws(Errcase.ErrType) in
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
+                
+                if let warns = ans?.warnings {
+                    logger.warnings("Delete 操作警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
                 
                 logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Policy Delete 操作执行完成")
@@ -139,8 +147,13 @@ public extension OPA {
                 }
                 return wrapped
             }.flatMapThrowing { (res: PolicyAnswer<T>?) in
-                logger.debug("取得查询结果", metadata: ["result": res == nil ? "nil" : "\(res!)"])
+                if let warns = res?.warnings {
+                    logger.warnings("Get 查询警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
+                
+                logger.debug("查询结果", metadata: ["result": res == nil ? "nil" : "\(res!)"])
                 logger.info("Policy Get 查询执行完成")
+                
                 return res
             }.logIfFail(logger: logger)
         }
@@ -169,8 +182,13 @@ public extension OPA {
                 }
                 return wrapped
             }.flatMapThrowing { (res: Answer<[PolicyResult<T>]>) in
-                logger.debug("取得查询结果", metadata: ["result": "\(res)"])
+                if let warns = res.warnings {
+                    logger.warnings("List 查询警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
+                
+                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Policy List 查询执行完成")
+                
                 return res
             }.logIfFail(logger: logger)
         }

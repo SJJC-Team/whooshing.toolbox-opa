@@ -57,7 +57,7 @@ public extension OPA {
                     try res.json().get()
                 }
             }.flatMapThrowing { (res: T) in
-                logger.debug("取得查询结果", metadata: ["result": "\(res)"])
+                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Simple 查询执行完成")
                 return res
             }.logIfFail(logger: logger)
@@ -106,8 +106,13 @@ public extension OPA {
                     try res.json().get()
                 }
             }.flatMapThrowing { (res: Answer<G>?) in
-                logger.debug("取得查询结果", metadata: ["result": res == nil ? "nil" : "\(res!)"])
+                if let warns = res?.warnings {
+                    logger.warnings("Data 查询警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
+                
+                logger.debug("查询结果", metadata: ["result": res == nil ? "nil" : "\(res!)"])
                 logger.info("Data 查询执行完成")
+                
                 return res
             }.logIfFail(logger: logger)
         }
@@ -155,8 +160,13 @@ public extension OPA {
                     try res.json().get()
                 }
             }.flatMapThrowing { (res: Answer<T?>) in
-                logger.debug("取得查询结果", metadata: ["result": "\(res)"])
-                logger.info("Data 查询执行完成")
+                if let warns = res.warnings {
+                    logger.warnings("Adhoc 查询警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
+                
+                logger.debug("查询结果", metadata: ["result": "\(res)"])
+                logger.info("Adhoc 查询执行完成")
+                
                 return res
             }.logIfFail(logger: logger)
         }

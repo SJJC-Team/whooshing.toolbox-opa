@@ -74,8 +74,13 @@ public extension OPA {
                     try res.json().get()
                 }
             }.flatMapThrowing { (res: Answer<T>) in
-                logger.debug("取得查询结果", metadata: ["result": "\(res)"])
+                if let warns = res.warnings {
+                    logger.warnings("Partial 查询警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
+                
+                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Compile Partial 查询执行完成")
+                
                 return res
             }.logIfFail(logger: logger)
         }
@@ -231,8 +236,13 @@ public extension OPA {
                     try res.json(accept: accept).get()
                 }
             }.flatMapThrowing { (res: Answer<T>) in
-                logger.info("取得查询结果", metadata: ["result": "\(res)"])
+                if let warns = res.warnings {
+                    logger.warnings("\(opName) 操作警告", metadatas: warns.map { ["warning": .data($0)] })
+                }
+                
+                logger.info("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Compile \(opName) DataFilter 查询执行完成")
+                
                 return res
             }.logIfFail(logger: logger)
         }

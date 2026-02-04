@@ -1,3 +1,4 @@
+import Logging
 import LoggingAdvanced
 
 public extension OPA {
@@ -38,35 +39,40 @@ public extension OPA {
     }
 }
 
+// MARK: - Err Description
 extension OPA.Err: Loggerable, CustomStringConvertible {
     public var description: String {
-        desc(head: true)
-    }
-    
-    public func desc(head: Bool) -> String {
-        var desc = (head ? "OPA.Error: " : "") + "[\(code)] \(message)"
+        var parts: [String] = ["code: \(code)", "message: \(message)"]
         
-        if let loc = location {
-            desc += " AT: \(loc.file):\(loc.row):\(loc.col)"
+        // 处理位置信息
+        if let location = location {
+            parts.append("location: {\(location)}")
         }
         
-        if let subErrors = errors, !subErrors.isEmpty {
-            let subDesc = subErrors.map { $0.desc(head: false) }.joined(separator: ", ")
-            desc += " { \(subDesc) }"
+        // 处理递归嵌套错误 (errors)
+        if let nestedErrors = errors, !nestedErrors.isEmpty {
+            let nestedDesc = nestedErrors.map { "{\($0)}" }.joined(separator: ", ")
+            parts.append("errors: [\(nestedDesc)]")
         }
         
-        return desc
+        return parts.joined(separator: ", ")
     }
 }
 
+// MARK: - Warning Description
 extension OPA.Warning: Loggerable, CustomStringConvertible {
     public var description: String {
-        var desc = "[\(code)] \(message)"
-        
-        if let loc = location {
-            desc += " AT: \(loc.file):\(loc.row):\(loc.col)"
+        var parts: [String] = ["code: \(code)", "message: \(message)"]
+        if let location = location {
+            parts.append("location: {\(location)}")
         }
-        
-        return desc
+        return parts.joined(separator: ", ")
+    }
+}
+
+// MARK: - Location Description
+extension OPA.Location: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "file: \(file), row: \(row), col: \(col)"
     }
 }
