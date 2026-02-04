@@ -107,7 +107,7 @@ public extension OPA {
                 }
             }.flatMapThrowing { (res: Answer<G>?) in
                 if let warns = res?.warnings {
-                    logger.warnings("Data 查询警告", metadatas: warns.map { ["warning": .data($0)] })
+                    logger.warnings("Data 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
                 }
                 
                 logger.debug("查询结果", metadata: ["result": res == nil ? "nil" : "\(res!)"])
@@ -161,7 +161,7 @@ public extension OPA {
                 }
             }.flatMapThrowing { (res: Answer<T?>) in
                 if let warns = res.warnings {
-                    logger.warnings("Adhoc 查询警告", metadatas: warns.map { ["warning": .data($0)] })
+                    logger.warnings("Adhoc 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
                 }
                 
                 logger.debug("查询结果", metadata: ["result": "\(res)"])

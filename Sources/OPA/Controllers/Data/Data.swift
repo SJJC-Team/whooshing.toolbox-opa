@@ -58,7 +58,7 @@ public extension OPA {
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
                 if let warns = ans?.warnings {
-                    logger.warnings("Save 操作警告", metadatas: warns.map { ["warning": .data($0)] })
+                    logger.warnings("Save 操作警告", paras: warns.map { (["warning": .data($0)], nil) })
                 }
                 
                 logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
@@ -97,7 +97,7 @@ public extension OPA {
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
                 if let warns = ans?.warnings {
-                    logger.warnings("Delete 操作警告", metadatas: warns.map { ["warning": .data($0)] })
+                    logger.warnings("Delete 操作警告", paras: warns.map { (["warning": .data($0)], nil) })
                 }
                 
                 logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
@@ -142,7 +142,7 @@ public extension OPA {
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
                 if let warns = ans?.warnings {
-                    logger.warnings("Patch 操作警告", metadatas: warns.map { ["warning": .data($0)] })
+                    logger.warnings("Patch 操作警告", paras: warns.map { (["warning": .data($0)], nil) })
                 }
                 
                 logger.debug("Patch 操作结果", metadata: ["result": .data(ans)])
@@ -205,7 +205,7 @@ public extension OPA {
                 let r = try? res.json(as: Answer<G>.self).get()
                 
                 if let warns = r?.warnings {
-                    logger.warnings("Get 查询警告", metadatas: warns.map { ["warning": .data($0)] })
+                    logger.warnings("Get 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
                 }
                 
                 logger.debug("查询结果", metadata: ["result": r == nil ? "nil" : .data(r!)])
