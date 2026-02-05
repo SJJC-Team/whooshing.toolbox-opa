@@ -626,6 +626,6 @@ struct OPACompileTesting {
     @MainActor
     @Test("测试结束")
     func end() async throws {
-        try! TestingShared.opa!.syncShutdown()
+        TestingShared.testStage = .examples
     }
 }

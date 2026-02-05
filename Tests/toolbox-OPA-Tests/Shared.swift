@@ -15,6 +15,7 @@ struct TestingShared {
         case policy
         case query
         case compile
+        case examples
     }
     
     static let host = ProcessInfo.processInfo.environment["GITHUB_OPA_TESTING_HOST"] ?? "localhost"
