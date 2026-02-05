@@ -149,7 +149,7 @@ public extension OPA {
                 path: path,
                 input: input,
                 accept: target.value,
-                options: options.set(sqlDialect: target),
+                options: __SQLTargetDataFilterOption(sqlDialect: target, from: options),
                 unknowns: unknowns,
                 parameter: parameter,
                 opName: "SQL"

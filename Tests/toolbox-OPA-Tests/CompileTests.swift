@@ -149,7 +149,7 @@ struct OPACompileTesting {
             ["favorite": "pineapple"],
             .postgresql,
             .init(
-                targetSQLTableMapping: [
+                tableMapping: [
                     "fruits": [
                         "$self": "fruit",
                         "name": "display_name",
@@ -186,7 +186,7 @@ struct OPACompileTesting {
             ["required_plan": "premium"],
             .sqlite,
             .init(
-                targetSQLTableMapping: [
+                tableMapping: [
                     "users": [
                         "$self": "u",
                         "status": "user_status"

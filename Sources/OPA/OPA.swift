@@ -142,7 +142,10 @@ public extension OPA {
             self.logger = logger
             self.client = HTTPClient(
                 eventLoopGroup: eventLoop,
-                configuration: .init(proxy: proxy, decompression: .enabled(limit: .none)),
+                configuration: .init(
+                    timeout: .init(connect: .seconds(30)),
+                    proxy: proxy, decompression: .enabled(limit: .none)
+                ),
                 backgroundActivityLogger: logger.derive(subId: "http.client.background")
             )
         }

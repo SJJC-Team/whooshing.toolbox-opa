@@ -97,8 +97,6 @@ public extension OPA.CompileController {
     
     /// SQL 目标数据过滤选项
     struct SQLTargetDataFilterOption: Encodable, Sendable {
-        /// 指定 SQL 方言 (内部设置)
-        public internal(set) var sqlDialect: TargetDialect.SQL!
         /// 禁止内联的路径
         public let disableInlining: [String]
         /// Mask 规则路径
@@ -109,35 +107,11 @@ public extension OPA.CompileController {
         public init(
             disableInlining: [String] = [],
             maskRule: String? = nil,
-            targetSQLTableMapping: [String: [String: String]] = [:]
+            tableMapping: [String : [String : String]] = [:]
         ) {
             self.disableInlining = disableInlining
             self.maskRule = maskRule
-            self.tableMapping = targetSQLTableMapping
-        }
-        
-        enum CodingKeys: CodingKey {
-            case disableInlining
-            case maskRule
-            case targetSQLTableMappings
-        }
-        
-        public func encode(to encoder: any Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(self.disableInlining, forKey: .disableInlining)
-            try container.encodeIfPresent(self.maskRule, forKey: .maskRule)
-            try container.encode([sqlDialect.rawValue: self.tableMapping], forKey: .targetSQLTableMappings)
-        }
-        
-        func set(sqlDialect: TargetDialect.SQL) -> Self {
-            var res = Self(
-                disableInlining: disableInlining,
-                maskRule: maskRule,
-                targetSQLTableMapping: tableMapping
-            )
-            
-            res.sqlDialect = sqlDialect
-            return res
+            self.tableMapping = tableMapping
         }
     }
    
@@ -212,6 +186,38 @@ public extension OPA.CompileController {
     }
 }
 
+extension OPA.CompileController {
+    struct __SQLTargetDataFilterOption: Encodable, Sendable {
+        let sqlDialect: TargetDialect.SQL
+        let disableInlining: [String]
+        let maskRule: String?
+        let tableMapping: [String: [String: String]]
+        
+        init(
+            sqlDialect: TargetDialect.SQL,
+            from: SQLTargetDataFilterOption
+        ) {
+            self.sqlDialect = sqlDialect
+            self.disableInlining = from.disableInlining
+            self.maskRule = from.maskRule
+            self.tableMapping = from.tableMapping
+        }
+        
+        enum CodingKeys: CodingKey {
+            case disableInlining
+            case maskRule
+            case targetSQLTableMappings
+        }
+        
+        func encode(to encoder: any Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.disableInlining, forKey: .disableInlining)
+            try container.encodeIfPresent(self.maskRule, forKey: .maskRule)
+            try container.encode([sqlDialect.rawValue: self.tableMapping], forKey: .targetSQLTableMappings)
+        }
+    }
+}
+
 extension OPA.CompileController.PartialOption: Loggerable, CustomStringConvertible {
     public var description: String {
         "disableInlining=\(disableInlining ?? []), nondeterminsticBuiltins=\(nondeterminsticBuiltins)"
@@ -233,7 +239,13 @@ extension OPA.CompileController.UCASTTargetDataFilterOption: Loggerable, CustomS
 
 extension OPA.CompileController.SQLTargetDataFilterOption: Loggerable, CustomStringConvertible {
     public var description: String {
-        let dialect = sqlDialect?.rawValue ?? "unknown"
-        return "dialect=\(dialect), disableInlining=\(disableInlining), maskRule=\(maskRule ?? "none"), tableMapping=\(tableMapping)"
+        "disableInlining=\(disableInlining), maskRule=\(maskRule ?? "none"), tableMapping=\(tableMapping)"
+    }
+}
+
+
+extension OPA.CompileController.__SQLTargetDataFilterOption: Loggerable, CustomStringConvertible {
+    public var description: String {
+        "dialect=\(sqlDialect), disableInlining=\(disableInlining), maskRule=\(maskRule ?? "none"), tableMapping=\(tableMapping)"
     }
 }
