@@ -22,7 +22,7 @@ jobs:
       ios_xcodebuild_action: ''
 
       with_opa_host: "localhost"
-      with_opa_port: "8282"
+      with_opa_port: 8181
       with_opa_version: "v1.13.1"
 
     secrets: inherit
