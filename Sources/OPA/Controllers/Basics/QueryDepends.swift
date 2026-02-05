@@ -40,7 +40,7 @@ extension OPA.QueryParameter {
             
             if let boolValue = value as? Bool {
                 stringValue = boolValue ? "true" : "false"
-            } else if let boolValue = value as? NSNumber, CFGetTypeID(boolValue) == CFBooleanGetTypeID() {
+            } else if let boolValue = value as? NSNumber {
                 stringValue = boolValue.boolValue ? "true" : "false"
             } else {
                 stringValue = "\(value)"
