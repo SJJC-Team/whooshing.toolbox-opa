@@ -17,7 +17,7 @@
 在你的 `Package.swift` 加入：
 
 ```swift
-.package(url: "https://github.com/SJJC-Team/whooshing.toolbox-opa", .upToNextMajor(from: "1.0.0"))
+.package(url: "https://github.com/SJJC-Team/whooshing.toolbox-opa", from: "1.0.0")
 ```
 
 在依赖模块中引入:
