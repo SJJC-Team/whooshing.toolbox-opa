@@ -204,10 +204,12 @@ print(partialResult.result.queries)
 
 ### 运行环境
 
-* **macOS** (> 12.0)
-* **iOS** (> 15.0)
-* **Linux** (支持 Swift 5.10+)
-* **Swift** (> 5.10)
+* **macOS** (> 11.0)
+* **iOS** (> 14.0)
+* **Linux** (> 20)
+* **Swift** (> 6.0)
+* **watchOS** (> 6.0) **[未测试]**
+* **tvOS**(> 13) **[未测试]**
 
 -------
 
