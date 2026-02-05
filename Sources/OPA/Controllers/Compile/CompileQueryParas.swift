@@ -16,7 +16,7 @@ public extension OPA.CompileController {
             pretty: Bool = false,
             explain: OPA.Explain = .off,
             metrics: Bool = false,
-            instrument: Bool = false,
+            instrument: Bool = false
         ) {
             self.pretty = pretty
             self.explain = explain

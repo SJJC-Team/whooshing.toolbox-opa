@@ -217,7 +217,7 @@ extension OPA.Controller {
         req: Res<HTTPClient.Request, OPA.Errcase>,
         logger: Logger,
         validStatusCode: Set<HTTPResponseStatus>,
-        errorStatusCode: [HTTPResponseStatus: (String, OPA.Errcase.ErrType.Category)],
+        errorStatusCode: [HTTPResponseStatus: (String, OPA.Errcase.ErrType.Category)]
     ) -> EventLoopRes<OPA.Response, OPA.Errcase> {
         eventLoop.makeResultWithTask { () throws(OPA.Errcase.ErrType) in
             let r = try req.get()

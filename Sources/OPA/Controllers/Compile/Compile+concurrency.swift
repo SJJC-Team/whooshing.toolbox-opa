@@ -16,7 +16,7 @@ public extension OPA.CompileController {
             options: options,
             unknowns: unknowns,
             as: type,
-            parameter: parameter,
+            parameter: parameter
         ).get()
     }
     

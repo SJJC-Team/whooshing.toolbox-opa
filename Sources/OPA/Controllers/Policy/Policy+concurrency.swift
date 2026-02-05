@@ -8,7 +8,7 @@ public extension OPA.PolicyController {
         try await save(
             by: id,
             content: content,
-            parameter: parameter,
+            parameter: parameter
         ).get()
     }
     
@@ -31,7 +31,7 @@ public extension OPA.PolicyController {
         try await get(
             at: id,
             as: type,
-            parameter: parameter,
+            parameter: parameter
         ).get()
     }
     
