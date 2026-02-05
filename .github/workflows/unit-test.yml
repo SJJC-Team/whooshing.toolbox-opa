@@ -1,0 +1,28 @@
+name: Unit Test
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+on:
+  pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
+  push: { branches: [ develop ] }
+
+jobs:
+  unit-tests:
+    uses: SJJC-Team/ci/.github/workflows/run-unit-tests.yml@develop
+    with:
+      ios_scheme_name: whooshing.toolbox-opa
+      work_dir: "."
+
+      with_release_mode_testing: true
+      with_musl: false
+      with_api_check: false
+      with_tsan: false
+      ios_xcodebuild_action: ''
+
+      with_opa_host: "localhost"
+      with_opa_port: "8181"
+      with_opa_version: "v1.13.1"
+
+    secrets: inherit
