@@ -1,6 +1,10 @@
 # Whooshing OPA 依赖库
 
-本项目为 [Whooshing](https://github.com/SJJC-Team/whooshing) 系统的 **OPA (Open Policy Agent) 依赖库**，旨在为 Swift 后端服务提供强类型的 OPA 交互能力。封装了 Policy 管理、Data 上下文维护以及高效的决策查询接口，全面支持 Swift Concurrency (Async/Await)。
+> [!NOTE]
+> 本项目核心依赖于 **[Open Policy Agent (OPA)](https://github.com/open-policy-agent/opa)**。
+> 特别感谢 OPA 团队创造了如此出色且强大的策略引擎，为本项目的实现提供了坚实基础。
+
+本项目为 [Whooshing](https://github.com/SJJC-Team/whooshing) 系统的 **OPA (Open Policy Agent) 依赖库**，旨在为 Swift 后端服务提供强类型的 OPA 交互能力。封装了 Policy 管理、Data 上下文维护以及高效的决策查询接口，全面支持 Swift Concurrency (Async/Await)。本库底层严格遵循并封装了 **[OPA REST API](https://www.openpolicyagent.org/docs/latest/rest-api/)**。
 
 ### 特性
 
@@ -210,6 +214,15 @@ print(partialResult.result.queries)
 * **Swift** (> 6.0)
 * **watchOS** (> 6.0) **[未测试]**
 * **tvOS**(> 13) **[未测试]**
+
+-------
+
+### OPA 参考资源
+
+- **[OPA 文档](https://www.openpolicyagent.org/docs)**: OPA 的官方文档，包含详细的概念介绍和使用指南。
+- **[Rego 语言参考](https://www.openpolicyagent.org/docs/policy-language)**: Rego 策略语言的语法和内置函数参考。
+- **[OPA 生态系统](https://www.openpolicyagent.org/ecosystem)**: 了解 OPA 的各种集成和工具。
+- **[OPA Playground](https://play.openpolicyagent.org/)**: 在线编写和测试 Rego 策略的实验环境。
 
 -------
 
