@@ -218,12 +218,14 @@ struct OPADataTesting {
         #expect(dataNew == dataTest.result)
         #expect(dataTest.warnings == nil)
     }
-    
-    @Test("Delete 测试", .serialized, arguments:
+
+    static var deleteList: [(String, [String: AnyCodable]?)] {
         dataList.map { ($0.0, $0.1 as [String: AnyCodable]?) } +
         patchList.map { ($0.3, $0.4) } +
         patchList2.map { ($0.3, $0.4) }
-    )
+    }
+    
+    @Test("Delete 测试", .serialized, arguments: deleteList)
     func dataDelete(path: String, data: [String: AnyCodable]?) async throws {
         let opa = try await TestingShared.getOPA()
         

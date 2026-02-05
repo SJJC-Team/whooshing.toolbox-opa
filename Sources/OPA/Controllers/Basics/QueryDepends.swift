@@ -26,8 +26,8 @@ public extension OPA {
     }
 }
 
-extension OPA.QueryParameter {
-    public var queryItems: [URLQueryItem] {
+public extension OPA.QueryParameter {
+    var queryItems: [URLQueryItem] {
         guard
             let data = try? JSONEncoder().encode(self),
             let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -38,11 +38,32 @@ extension OPA.QueryParameter {
         return json.compactMap { key, value in
             let stringValue: String
             
+            // 1. 优先尝试 Swift 原生 Bool
             if let boolValue = value as? Bool {
                 stringValue = boolValue ? "true" : "false"
-            } else if let boolValue = value as? NSNumber {
-                stringValue = boolValue.boolValue ? "true" : "false"
-            } else {
+            } 
+            // 2. 处理 NSNumber (处理从 JSONSerialization 出来的布尔值)
+            else if let nsNumber = value as? NSNumber {
+                #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+                // Apple 平台：利用 CoreFoundation 精确区分 Boolean 和 Integer
+                if CFGetTypeID(nsNumber) == CFBooleanGetTypeID() {
+                    stringValue = nsNumber.boolValue ? "true" : "false"
+                } else {
+                    stringValue = "\(nsNumber)"
+                }
+                #else
+                // Linux 平台：检查底层类型编码码 (Type Encoding)
+                // 'c' 代表 char (BOOL), 'B' 代表 C++ bool
+                let typeChar = UnicodeScalar(UInt8(nsNumber.objCType.pointee))
+                if typeChar == "c" || typeChar == "B" {
+                    stringValue = nsNumber.boolValue ? "true" : "false"
+                } else {
+                    stringValue = "\(nsNumber)"
+                }
+                #endif
+            } 
+            // 3. 兜底处理 (String, Int, Double 等)
+            else {
                 stringValue = "\(value)"
             }
             

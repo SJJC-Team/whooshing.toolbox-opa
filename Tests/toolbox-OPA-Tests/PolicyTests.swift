@@ -139,8 +139,12 @@ struct OPAPolicyTesting {
         #expect(res.result.count == Self.policyList.count)
         #expect(res.result.allSatisfy { r in Self.policyList.contains { $0.1 == r.raw && $0.0 == r.id } })
     }
+
+    static var policyIds: [String] {
+        policyList.map { $0.0 }
+    }
     
-    @Test("Policy Delete 测试", arguments: policyList.map { $0.0 })
+    @Test("Policy Delete 测试", arguments: policyIds)
     func policyDelete(id: String) async throws {
         let opa = try await TestingShared.getOPA()
         
