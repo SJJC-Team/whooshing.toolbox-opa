@@ -94,9 +94,69 @@ struct OPAExtraTesting {
         )
         
         #expect(ans2.result == nil)
+        
+        try await clean()
+    }
+    
+    @Test("Test2")
+    func test2() async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        try await opa.policy.save(by: "id_test_001", content: """
+        package rules.id_1001
+        allow if {
+            input.resource.owner.name == input.user.name
+            input.action == "read"
+        }
+        """)
+        
+        try await opa.policy.save(by: "id_test_002", content: """
+        package rules.id_1002
+        allow if {
+            input.resource.lvl >= 5
+            input.action == "write"
+        }
+        """)
+        
+        try await opa.policy.save(by: "authz", content: """
+        package authz
+        
+        import data.rules
+        
+        check if {
+            current_rule := rules[_]
+            current_rule == input.rules[_]
+            current_rule.allow == input.allow
+        }
+        """)
+        
+        let sqlRes = try await opa.compile.sqlDataFilter(
+            path: "/authz/check",
+            input: [
+                "resource": AnyCodable([
+                    "owner": [
+                        "name": "clwang"
+                    ],
+                    "lvl": 10,
+                ]),
+                "input.action": "write",
+                "allow": true
+            ],
+            target: .postgresql,
+            unknowns: ["input.rules"]
+        )
+        
+        let h = try #require(sqlRes.hints)
+        #expect(!h.isEmpty)
+
+        try await clean()
+    }
+    
+    @Test("清理")
+    func finalClean() async throws {
+        try await clean()
     }
 
-    @Test("清理")
     func clean() async throws {
         let opa = try await TestingShared.getOPA()
         

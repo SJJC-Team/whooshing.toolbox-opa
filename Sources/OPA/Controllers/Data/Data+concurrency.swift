@@ -50,7 +50,7 @@ public extension OPA.DataController {
         from path: String,
         as type: G.Type = G.self,
         parameter: GetQueryParameter = .init()
-    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<G>? {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<G?> {
         try await get(
             from: path,
             as: type,

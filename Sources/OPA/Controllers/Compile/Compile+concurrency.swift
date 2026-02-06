@@ -9,7 +9,7 @@ public extension OPA.CompileController {
         unknowns: [String],
         as type: T.Type = PartialResult.self,
         parameter: QueryParameter = .init()
-    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<T> {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<T?> {
         try await partial(
             query: query,
             input: input,
@@ -31,7 +31,7 @@ public extension OPA.CompileController {
         unknowns: [String],
         parameter: QueryParameter = .init(),
         as type: T.Type = UCASTTargetResult.self
-    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<T> {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<T?> {
         try await uCastDataFilter(
             path: path,
             input: input,
@@ -54,7 +54,7 @@ public extension OPA.CompileController {
         unknowns: [String],
         parameter: QueryParameter = .init(),
         as type: T.Type = SQLTargetResult.self
-    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<T> {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<T?> {
         try await sqlDataFilter(
             path: path,
             input: input,
@@ -76,7 +76,7 @@ public extension OPA.CompileController {
         unknowns: [String],
         parameter: QueryParameter = .init(),
         as type: T.Type = MultiTargetResult.self
-    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<T> {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<T?> {
         try await dataFilter(
             path: path,
             input: input,

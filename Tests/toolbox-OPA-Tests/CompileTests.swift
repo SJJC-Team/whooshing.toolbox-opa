@@ -36,13 +36,13 @@ struct OPACompileTesting {
         DataType,
         OPA.CompileController.PartialOption,
         [String],
-        @Sendable (OPA.Answer<OPA.CompileController.PartialResult>) throws -> Bool
+        @Sendable (OPA.Answer<OPA.CompileController.PartialResult?>) throws -> Bool
     )] = [
         // 1. Deterministic Success (True) -> 结果应为 queries: [[]]
         (
             [], [], "x = 1; y = 2; x < y", [:], .init(), [],
             {
-                $0.result.description == """
+                $0.result?.description == """
                 [ref(eq) var("x") number(1)] AND [ref(eq) var("y") number(2)]
                 """
             }
@@ -52,7 +52,7 @@ struct OPACompileTesting {
         (
             [], [], "x = 1; y = 2; x > y", [:], .init(), [],
             {
-                $0.result.description == "always false"
+                $0.result?.description == "always false"
             }
         ),
         
@@ -65,7 +65,7 @@ struct OPACompileTesting {
             .init(),
             [],
             {
-                $0.result.description == "always true"
+                $0.result?.description == "always true"
             }
         ),
         
@@ -73,7 +73,7 @@ struct OPACompileTesting {
         (
             [], [], "input.x > 10", [:], .init(), ["input.x"],
             {
-                $0.result.description == "[ref(gt) ref(input.x) number(10)]"
+                $0.result?.description == "[ref(gt) ref(input.x) number(10)]"
             }
         ),
         
@@ -86,7 +86,7 @@ struct OPACompileTesting {
             .init(),
             ["input.x"],
             {
-                $0.result.description == "[ref(eq) ref(input.x) number(100)]"
+                $0.result?.description == "[ref(eq) ref(input.x) number(100)]"
             }
         )
     ]
@@ -99,7 +99,7 @@ struct OPACompileTesting {
         OPA.CompileController.TargetDialect.SQL,
         OPA.CompileController.SQLTargetDataFilterOption,
         [String],
-        @Sendable (OPA.Answer<OPA.CompileController.SQLTargetResult>) throws -> Bool
+        @Sendable (OPA.Answer<OPA.CompileController.SQLTargetResult?>) throws -> Bool
     )] = [
         (
             [],
@@ -126,7 +126,7 @@ struct OPACompileTesting {
             .init(),
             [],
             {
-                $0.result.query == "WHERE fruits.name = E\'pineapple\'"
+                $0.result?.query == "WHERE fruits.name = E\'pineapple\'"
             }
         ),
         (
@@ -162,7 +162,7 @@ struct OPACompileTesting {
             ),
             ["input.fruits", "input.price"],
             {
-                $0.result.query == "WHERE (fruit.display_name = E'pineapple' OR fruit.price_tag = E'free')"
+                $0.result?.query == "WHERE (fruit.display_name = E'pineapple' OR fruit.price_tag = E'free')"
             }
         ),
         (
@@ -199,7 +199,7 @@ struct OPACompileTesting {
             ),
             ["input.users", "input.subscriptions"],
             {
-                $0.result.query == "WHERE (u.user_status = 'active' AND s.plan_level = 'premium')"
+                $0.result?.query == "WHERE (u.user_status = 'active' AND s.plan_level = 'premium')"
             }
         )
     ]
@@ -212,7 +212,7 @@ struct OPACompileTesting {
         OPA.CompileController.TargetDialect.UCAST,
         OPA.CompileController.UCASTTargetDataFilterOption,
         [String],
-        @Sendable (OPA.Answer<OPA.CompileController.UCASTTargetResult>) throws -> Bool
+        @Sendable (OPA.Answer<OPA.CompileController.UCASTTargetResult?>) throws -> Bool
     )] = [
         (
             [],
@@ -239,7 +239,7 @@ struct OPACompileTesting {
             .init(),
             [],
             {
-                $0.result.query == [
+                $0.result?.query == [
                     "field": "fruits.name",
                     "operator": "eq",
                     "type": "field",
@@ -270,7 +270,7 @@ struct OPACompileTesting {
             .init(),
             ["input.users", "input.subscriptions"],
             {
-                $0.result.query == [
+                $0.result?.query == [
                     "operator": "and",
                     "type": "compound",
                     "value": [
@@ -299,7 +299,7 @@ struct OPACompileTesting {
         DataType,
         OPA.CompileController.MultiTargetDataFilterOption,
         [String],
-        @Sendable (OPA.Answer<OPA.CompileController.MultiTargetResult>) throws -> Bool
+        @Sendable (OPA.Answer<OPA.CompileController.MultiTargetResult?>) throws -> Bool
     )] = [
         (
             [],
@@ -328,8 +328,8 @@ struct OPACompileTesting {
             [],
             {
                 try
-                #require($0.result.postgresql?.query) == "WHERE fruits.name = E'pineapple'" &&
-                #require($0.result.sqlserver?.query) == "WHERE fruits.name = N'pineapple'"
+                #require($0.result?.postgresql?.query) == "WHERE fruits.name = E'pineapple'" &&
+                #require($0.result?.sqlserver?.query) == "WHERE fruits.name = N'pineapple'"
             }
         ),
         (
@@ -367,7 +367,7 @@ struct OPACompileTesting {
             ),
             ["input.fruits", "input.price"],
             {
-                try #require($0.result.mysql?.query) == "WHERE (fruit.display_name = 'pineapple' OR fruit.price_tag = 'free')"
+                try #require($0.result?.mysql?.query) == "WHERE (fruit.display_name = 'pineapple' OR fruit.price_tag = 'free')"
             }
         ),
         (
@@ -407,8 +407,8 @@ struct OPACompileTesting {
             ["input.users", "input.subscriptions"],
             {
                 try
-                #require($0.result.sqlite?.query) == "WHERE (u.user_status = 'active' AND s.plan_level = 'premium')" &&
-                #require($0.result.ucast?.query) == [
+                #require($0.result?.sqlite?.query) == "WHERE (u.user_status = 'active' AND s.plan_level = 'premium')" &&
+                #require($0.result?.ucast?.query) == [
                     "operator": "and",
                     "type": "compound",
                     "value": [
@@ -438,7 +438,7 @@ struct OPACompileTesting {
         input: DataType,
         options: OPA.CompileController.PartialOption,
         unknowns: [String],
-        result: @Sendable (OPA.Answer<OPA.CompileController.PartialResult>) throws -> Bool
+        result: @Sendable (OPA.Answer<OPA.CompileController.PartialResult?>) throws -> Bool
     ) async throws {
         let opa = try await TestingShared.getOPA()
         
@@ -452,7 +452,7 @@ struct OPACompileTesting {
         )
         #expect(try result(queryRes))
         
-        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.PartialResult>) -> Bool)](
+        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.PartialResult?>) -> Bool)](
             arrayLiteral:
             ("pretty 测试", .init(pretty: true), { _ in true }),
             ("explain 测试", .init(explain: .full), { _ in true }),
@@ -487,7 +487,7 @@ struct OPACompileTesting {
         target: OPA.CompileController.TargetDialect.SQL,
         options: OPA.CompileController.SQLTargetDataFilterOption,
         unknowns: [String],
-        result: @Sendable (OPA.Answer<OPA.CompileController.SQLTargetResult>) throws -> Bool
+        result: @Sendable (OPA.Answer<OPA.CompileController.SQLTargetResult?>) throws -> Bool
     ) async throws {
         let opa = try await TestingShared.getOPA()
         
@@ -502,7 +502,7 @@ struct OPACompileTesting {
         )
         #expect(try result(queryRes))
         
-        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.SQLTargetResult>) -> Bool)](
+        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.SQLTargetResult?>) -> Bool)](
             arrayLiteral:
             ("pretty 测试", .init(pretty: true), { _ in true }),
             ("explain 测试", .init(explain: .full), { _ in true }),
@@ -539,7 +539,7 @@ struct OPACompileTesting {
         target: OPA.CompileController.TargetDialect.UCAST,
         options: OPA.CompileController.UCASTTargetDataFilterOption,
         unknowns: [String],
-        result: @Sendable (OPA.Answer<OPA.CompileController.UCASTTargetResult>) throws -> Bool
+        result: @Sendable (OPA.Answer<OPA.CompileController.UCASTTargetResult?>) throws -> Bool
     ) async throws {
         let opa = try await TestingShared.getOPA()
         
@@ -554,7 +554,7 @@ struct OPACompileTesting {
         )
         #expect(try result(queryRes))
         
-        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.UCASTTargetResult>) -> Bool)](
+        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.UCASTTargetResult?>) -> Bool)](
             arrayLiteral:
             ("pretty 测试", .init(pretty: true), { _ in true }),
             ("explain 测试", .init(explain: .full), { _ in true }),
@@ -586,7 +586,7 @@ struct OPACompileTesting {
         input: DataType,
         options: OPA.CompileController.MultiTargetDataFilterOption,
         unknowns: [String],
-        result: @Sendable (OPA.Answer<OPA.CompileController.MultiTargetResult>) throws -> Bool
+        result: @Sendable (OPA.Answer<OPA.CompileController.MultiTargetResult?>) throws -> Bool
     ) async throws {
         let opa = try await TestingShared.getOPA()
         
@@ -600,7 +600,7 @@ struct OPACompileTesting {
         )
         #expect(try result(queryRes))
         
-        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.MultiTargetResult>) -> Bool)](
+        for (name, key, value) in [(String, OPA.CompileController.QueryParameter, @Sendable (OPA.Answer<OPA.CompileController.MultiTargetResult?>) -> Bool)](
             arrayLiteral:
             ("pretty 测试", .init(pretty: true), { _ in true }),
             ("explain 测试", .init(explain: .full), { _ in true }),

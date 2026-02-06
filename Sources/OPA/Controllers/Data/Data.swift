@@ -57,10 +57,7 @@ public extension OPA {
                 
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
-                if let warns = ans?.warnings {
-                    logger.warnings("Save 操作警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+                ans?.logHintsIfHas(label: "Save 操作", logger: logger)
                 logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Save 操作执行完成", metadata: ["result": .data(r)])
                 
@@ -96,10 +93,7 @@ public extension OPA {
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
-                if let warns = ans?.warnings {
-                    logger.warnings("Delete 操作警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+                ans?.logHintsIfHas(label: "Delete 操作", logger: logger)
                 logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Delete 操作执行完成")
                 
@@ -141,10 +135,7 @@ public extension OPA {
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
-                if let warns = ans?.warnings {
-                    logger.warnings("Patch 操作警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+                ans?.logHintsIfHas(label: "Patch 操作", logger: logger)
                 logger.debug("Patch 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Patch 操作执行完成")
                 
@@ -163,11 +154,11 @@ public extension OPA {
             parameter: GetQueryParameter = .init()
         ) -> EventLoopRes<Answer<G>, Errcase> {
             get(from: "", as: G.self, parameter: parameter).map { res in
-                guard let r = res else {
+                guard let r = res.result else {
                     fatalError("All 不应当为空")
                 }
                 
-                return r
+                return .init(result: r)
             }
         }
         
@@ -177,12 +168,12 @@ public extension OPA {
         ///   - path: 数据路径
         ///   - type: 结果映射类型
         ///   - parameter: 查询参数
-        /// - Returns: 包含数据的 Answer，如果不存在则为 nil
+        /// - Returns: 包含数据的 Answer，如果不存在则 ans.result == nil
         public func get<G: Decodable & Sendable>(
             from path: String,
             as type: G.Type = G.self,
             parameter: GetQueryParameter = .init()
-        ) -> EventLoopRes<Answer<G>?, Errcase> {
+        ) -> EventLoopRes<Answer<G?>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Data Get 查询", metadata: ["path": .string(path)])
@@ -202,13 +193,10 @@ public extension OPA {
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                let r = try? res.json(as: Answer<G>.self).get()
+                let r = (try? res.json(as: Answer<G?>.self).get()) ?? .init(result: nil)
                 
-                if let warns = r?.warnings {
-                    logger.warnings("Get 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
-                logger.debug("查询结果", metadata: ["result": r == nil ? "nil" : .data(r!)])
+                r.logHintsIfHas(label: "Get 查询", logger: logger)
+                logger.debug("查询结果", metadata: ["result": .data(r)])
                 logger.info("Data Get 查询执行完成")
                 
                 return r

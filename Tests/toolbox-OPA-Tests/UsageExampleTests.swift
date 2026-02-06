@@ -123,8 +123,8 @@ struct UsageExampleTests {
             // API: GET /v1/policies/<id>
             // 可以获取原始 Rego 代码，用于验证或审计。
             // 使用 AnyCodable 接收结果，或者使用 String.self 获取 raw content。
-            if let policy = try await opa.policy.get(at: policyId, as: AnyCodable.self).get() {
-                print("获取到策略 ID: \(policy.result.id)")
+            if let policy = try await opa.policy.get(at: policyId, as: AnyCodable.self).result {
+                print("获取到策略 ID: \(policy.id)")
             } else {
                 Issue.record("错误: 刚刚保存的策略应当存在")
             }
@@ -193,9 +193,9 @@ struct UsageExampleTests {
                 from: dataPath,
                 as: UserInfo.self,
                 parameter: .init(strictBuiltinErrors: false)
-            ).get() {
-                print("获取到数据: role=\(fetchedData.result.role)")
-                #expect(fetchedData.result.role == "deployer")
+            ).result {
+                print("获取到数据: role=\(fetchedData.role)")
+                #expect(fetchedData.role == "deployer")
             } else {
                 Issue.record("数据应当存在")
             }
@@ -217,7 +217,7 @@ struct UsageExampleTests {
                 as: UserInfo.self,
                 parameter: .init(strictBuiltinErrors: false)
             ).get()
-            #expect(updatedData?.result.role == "admin")
+            #expect(updatedData.result?.role == "admin")
             
             // 3.4 删除数据
             // API: DELETE /v1/data/<path>
@@ -383,10 +383,10 @@ struct UsageExampleTests {
             // 规则1 (admin) -> bob != admin -> False (被优化掉)
             // 规则2 (owner) -> bob == input.resource.owner -> 保留为剩余条件
             
-            print("部分求值结果 (AST Queries): \(partialResult.result.queries ?? [])")
+            print("部分求值结果 (AST Queries): \(partialResult.result?.queries ?? [])")
             
-            #expect(partialResult.result.queries != nil)
-            #expect(partialResult.result.queries!.count > 0)
+            #expect(partialResult.result?.queries != nil)
+            #expect(partialResult.result!.queries!.count > 0)
             
             // 清理
             _ = try? await opa.policy.delete(of: policyId).get()

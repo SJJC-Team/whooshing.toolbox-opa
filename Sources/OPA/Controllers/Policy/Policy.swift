@@ -48,10 +48,7 @@ public extension OPA {
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
-                if let warns = ans?.warnings {
-                    logger.warnings("Save 操作警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+                ans?.logHintsIfHas(label: "Save 操作", logger: logger)
                 logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Policy Save 操作执行完成")
                 
@@ -87,10 +84,7 @@ public extension OPA {
             ).flatMapThrowing {res throws(Errcase.ErrType) in
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
-                if let warns = ans?.warnings {
-                    logger.warnings("Delete 操作警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+                ans?.logHintsIfHas(label: "Delete 操作", logger: logger)
                 logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Policy Delete 操作执行完成")
                 
@@ -109,7 +103,7 @@ public extension OPA {
         }
         
         /// 策略 API 响应
-        public typealias PolicyAnswer<T: Decodable & Sendable> = Answer<PolicyResult<T>>
+        public typealias PolicyAnswer<T: Decodable & Sendable> = Answer<PolicyResult<T>?>
         
         /// 获取指定策略
         ///
@@ -117,12 +111,12 @@ public extension OPA {
         ///   - id: 策略 ID
         ///   - type: AST 映射类型
         ///   - parameter: 查询参数
-        /// - Returns: 包含策略信息的 Answer
+        /// - Returns: 包含策略信息的 Answer，若未找到，则 ans.result == nil
         public func get<T: Decodable & Sendable>(
             at id: String,
             as type: T.Type = T.self,
             parameter: GetQueryParameter = .init()
-        ) -> EventLoopRes<PolicyAnswer<T>?, Errcase> {
+        ) -> EventLoopRes<PolicyAnswer<T>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Policy Get 查询", metadata: ["id": .string(id)])
@@ -139,19 +133,16 @@ public extension OPA {
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 if res.status == .notFound {
-                    return nil
+                    return .init(result: nil)
                 }
                 
                 let wrapped = try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: PolicyAnswer<T>.self)) 失败", category: .internal) {
                     try res.json(as: PolicyAnswer<T>.self).get()
                 }
                 return wrapped
-            }.flatMapThrowing { (res: PolicyAnswer<T>?) in
-                if let warns = res?.warnings {
-                    logger.warnings("Get 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
-                logger.debug("查询结果", metadata: ["result": res == nil ? "nil" : "\(res!)"])
+            }.flatMapThrowing { (res: PolicyAnswer<T>) in
+                res.logHintsIfHas(label: "Get 查询", logger: logger)
+                logger.debug("查询结果", metadata: ["result": .data(res)])
                 logger.info("Policy Get 查询执行完成")
                 
                 return res
@@ -182,10 +173,7 @@ public extension OPA {
                 }
                 return wrapped
             }.flatMapThrowing { (res: Answer<[PolicyResult<T>]>) in
-                if let warns = res.warnings {
-                    logger.warnings("List 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+                res.logHintsIfHas(label: "List 查询", logger: logger)
                 logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Policy List 查询执行完成")
                 

@@ -151,11 +151,11 @@ struct OPADataTesting {
         #expect(res.result == true)
         #expect(res.metrics != nil)
         
-        let dataOutput = try #require(try await opa.data.get(from: path, as: [String: AnyCodable].self))
+        let dataOutput = try await opa.data.get(from: path, as: [String: AnyCodable].self)
         #expect(data == dataOutput.result)
         #expect(dataOutput.warnings == nil)
         
-        for (name, key, value) in [(String, OPA.DataController.GetQueryParameter, @Sendable (OPA.Answer<TestingShared.DataType>) -> Bool)](
+        for (name, key, value) in [(String, OPA.DataController.GetQueryParameter, @Sendable (OPA.Answer<TestingShared.DataType?>) -> Bool)](
             arrayLiteral:
             ("pretty 测试", .init(pretty: true), { _ in true }),
             ("provenance 测试", .init(provenance: true), { $0.provenance != nil }),
@@ -164,7 +164,7 @@ struct OPADataTesting {
             ("instrument 测试", .init(instrument: true), { $0.metrics?.histogramEvalOpPlug != nil && $0.metrics?.histogramEvalOpResolve != nil }),
             ("strictBuiltinErrors 测试", .init(strictBuiltinErrors: true), { _ in true })
         ) {
-            let dataOutput = try #require(try await opa.data.get(from: path, as: [String: AnyCodable].self, parameter: key), .init(stringLiteral: name))
+            let dataOutput = try await opa.data.get(from: path, as: [String: AnyCodable].self, parameter: key)
             #expect(data == dataOutput.result, .init(stringLiteral: name))
             #expect(dataOutput.warnings == nil, .init(stringLiteral: name))
             #expect(value(dataOutput), .init(stringLiteral: name))
@@ -194,7 +194,7 @@ struct OPADataTesting {
         
         try await opa.data.patch(to: path, operations: patchOperation)
         
-        let dataTest = try #require(try await opa.data.get(from: pathNew, as: [String: AnyCodable].self))
+        let dataTest = try await opa.data.get(from: pathNew, as: [String: AnyCodable].self)
         #expect(dataNew == dataTest.result)
         #expect(dataTest.warnings == nil)
     }
@@ -214,7 +214,7 @@ struct OPADataTesting {
         
         try await opa.data.patch(to: path, operations: patchOperation)
         
-        let dataTest = try #require(try await opa.data.get(from: pathNew, as: [String: AnyCodable].self))
+        let dataTest = try await opa.data.get(from: pathNew, as: [String: AnyCodable].self)
         #expect(dataNew == dataTest.result)
         #expect(dataTest.warnings == nil)
     }
@@ -230,7 +230,7 @@ struct OPADataTesting {
         let opa = try await TestingShared.getOPA()
         
         let d = try await opa.data.get(from: path, as: [String: AnyCodable].self)
-        #expect(d?.result == data)
+        #expect(d.result == data)
         
         let metrics = Bool.random()
         let res = try await opa.data.delete(of: path, parameter: .init(metrics: metrics))
@@ -244,7 +244,7 @@ struct OPADataTesting {
         let opa = try await TestingShared.getOPA()
         
         let res = try await opa.data.get(from: "/the/path/doesn/t/exist", as: [String: AnyCodable].self)
-        #expect(res == nil)
+        #expect(res.result == nil)
     }
     
     @Test("Data 应当为空")

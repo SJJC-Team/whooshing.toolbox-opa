@@ -1,6 +1,7 @@
 import Foundation
 import ErrorHandle
 import LoggingAdvanced
+import Logging
 @preconcurrency import AnyCodable
 
 public extension OPA {
@@ -10,6 +11,8 @@ public extension OPA {
     struct Answer<T: Decodable & Sendable>: Decodable, Sendable {
         /// API 调用的主要结果
         public let result: T
+        /// 提示信息列表
+        public let hints: [Hint]?
         /// 警告信息列表
         public let warnings: [Warning]?
         /// 决策 ID (用于审计和追踪)
@@ -31,7 +34,7 @@ public extension OPA {
         public let provenance: Provenance?
 
         enum CodingKeys: String, CodingKey {
-            case result, warnings, metrics, explanation, provenance
+            case result, hints, warnings, metrics, explanation, provenance
             case decisionId = "decision_id"
         }
         
@@ -46,6 +49,7 @@ public extension OPA {
                 self.result = try container.decode(T.self, forKey: .result)
             }
 
+            self.hints = try container.decodeIfPresent([Hint].self, forKey: .hints)
             self.warnings = try container.decodeIfPresent([Warning].self, forKey: .warnings)
             self.decisionId = try container.decodeIfPresent(String.self, forKey: .decisionId)
             self.provenance = try container.decodeIfPresent(Provenance.self, forKey: .provenance)
@@ -55,6 +59,7 @@ public extension OPA {
         
         init(
             result: T,
+            hints: [Hint]? = nil,
             warnings: [Warning]? = nil,
             decisionId: String? = nil,
             metrics: Metrics? = nil,
@@ -62,6 +67,7 @@ public extension OPA {
             provenance: Provenance? = nil
         ) {
             self.result = result
+            self.hints = hints
             self.warnings = warnings
             self.decisionId = decisionId
             self.metrics = metrics
@@ -77,6 +83,34 @@ public extension OPA {
                 metrics: metrics,
                 explanation: explanation
             )
+        }
+        
+        func logHintsIfHas(
+            label: Logger.Message,
+            logger: Logger,
+            file: String = #fileID,
+            function: String = #function,
+            line: UInt = #line
+        ) {
+            if let hints = self.hints {
+                logger.warnings(
+                    "\(label)提示",
+                    paras: hints.map { (["hint": .data($0)], nil) },
+                    file: file,
+                    function: function,
+                    line: line
+                )
+            }
+            
+            if let warns = self.warnings {
+                logger.warnings(
+                    "\(label)警告",
+                    paras: warns.map { (["warning": .data($0)], nil) },
+                    file: file,
+                    function: function,
+                    line: line
+                )
+            }
         }
     }
     

@@ -28,6 +28,16 @@ public extension OPA {
         public let location: Location?
     }
     
+    /// OPA 提示结构体
+    ///
+    /// 表示从 OPA 返回的提示信息。
+    struct Hint: Codable, Error, Sendable {
+        /// 提示详细描述
+        public let message: String
+        /// 提示发生的位置
+        public let location: Location?
+    }
+    
     /// 代码位置信息
     struct Location: Codable, Sendable {
         /// 文件名
@@ -63,6 +73,17 @@ extension OPA.Err: Loggerable, CustomStringConvertible {
 extension OPA.Warning: Loggerable, CustomStringConvertible {
     public var description: String {
         var parts: [String] = ["code: \(code)", "message: \(message)"]
+        if let location = location {
+            parts.append("location: {\(location)}")
+        }
+        return parts.joined(separator: ", ")
+    }
+}
+
+// MARK: - Warning Description
+extension OPA.Hint: Loggerable, CustomStringConvertible {
+    public var description: String {
+        var parts: [String] = ["message: \(message)"]
         if let location = location {
             parts.append("location: {\(location)}")
         }

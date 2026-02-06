@@ -103,10 +103,7 @@ public extension OPA {
             ).flatMapThrowing { res throws(Errcase.ErrType) in
                 let ans = try? res.json(as: Answer<G?>.self).get()
                 
-                if let warns = ans?.warnings {
-                    logger.warnings("Data 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+                ans?.logHintsIfHas(label: "Data 查询", logger: logger)
                 logger.debug("查询结果", metadata: ["result": .data(ans)])
                 logger.info("Data 查询执行完成")
                 
@@ -158,10 +155,7 @@ public extension OPA {
                     try res.json().get()
                 }
             }.flatMapThrowing { (res: Answer<T?>) in
-                if let warns = res.warnings {
-                    logger.warnings("Adhoc 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+                res.logHintsIfHas(label: "Adhoc 查询", logger: logger)
                 logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Adhoc 查询执行完成")
                 

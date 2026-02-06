@@ -21,7 +21,7 @@
 在你的 `Package.swift` 加入：
 
 ```swift
-.package(url: "https://github.com/SJJC-Team/whooshing.toolbox-opa", from: "1.0.0")
+.package(url: "https://github.com/SJJC-Team/whooshing.toolbox-opa", from: "1.0.1")
 ```
 
 在依赖模块中引入:
@@ -89,19 +89,19 @@ allow if {
 """
 
 // 保存策略 (若存在则覆盖)
-try await opa.policy.save(by: policyId, content: regoCode).get()
+try await opa.policy.save(by: policyId, content: regoCode)
 ```
 
 **获取与列出:**
 
 ```swift
 // 获取指定策略内容
-if let policy = try await opa.policy.get(at: policyId, as: String.self).get() {
-    print("Policy ID: \(policy.result.id)")
+if let policy = try await opa.policy.get(at: policyId, as: String.self).result {
+    print("Policy ID: \(policy.id)")
 }
 
 // 列出所有策略
-let list = try await opa.policy.list(as: AnyCodable.self).get()
+let list = try await opa.policy.list(as: AnyCodable.self)
 print("Total policies: \(list.result.count)")
 ```
 
@@ -120,22 +120,22 @@ let dataPath = "/users/bob" // 对应 Rego 中的 data.users.bob
 
 // 保存数据
 let userInfo = UserInfo(role: "deployer", age: 30)
-try await opa.data.save(on: dataPath, data: userInfo).get()
+try await opa.data.save(on: dataPath, data: userInfo)
 
 // 获取数据 (建议显式关闭 strict-builtin-errors 以提高兼容性)
 if let fetched = try await opa.data.get(
     from: dataPath, 
     as: UserInfo.self, 
     parameter: .init(strictBuiltinErrors: false)
-).get() {
-    print("Role: \(fetched.result.role)")
+).result {
+    print("Role: \(fetched.role)")
 }
 
 // 局部更新 (Patch)
 let patchOps: [OPA.PatchOperation] = [
     .replace(path: "/role", value: AnyCodable("admin"))
 ]
-try await opa.data.patch(to: dataPath, operations: patchOps).get()
+try await opa.data.patch(to: dataPath, operations: patchOps)
 ```
 
 #### 4. 决策查询 (Query)
@@ -161,7 +161,7 @@ let allowed = try await opa.query.data(
     input: input,
     as: Bool.self,
     parameter: .init(strictBuiltinErrors: false)
-).get()
+)
 
 if allowed.result == true {
     print("Access Granted")
@@ -178,7 +178,7 @@ let result = try await opa.query.adhoc(
     query: "input.x * 2 > 10",
     input: ["x": 6],
     as: Bool.self
-).get()
+)
 ```
 
 #### 5. 高级功能: 部分求值 (Compile)
@@ -198,10 +198,10 @@ let partialResult = try await opa.compile.partial(
     query: "data.example.authz.allow == true",
     input: input,
     unknowns: unknowns
-).get()
+)
 
 // 返回简化后的查询条件 AST
-print(partialResult.result.queries)
+print(partialResult.result?.queries)
 ```
 
 -------

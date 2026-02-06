@@ -27,7 +27,7 @@ public extension OPA.PolicyController {
         at id: String,
         as type: T.Type = T.self,
         parameter: GetQueryParameter = .init()
-    ) async throws(OPA.Errcase.ErrType) -> PolicyAnswer<T>? {
+    ) async throws(OPA.Errcase.ErrType) -> PolicyAnswer<T> {
         try await get(
             at: id,
             as: type,

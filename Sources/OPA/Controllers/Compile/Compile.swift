@@ -42,7 +42,7 @@ public extension OPA {
             unknowns: [String],
             as type: T.Type = PartialResult.self,
             parameter: QueryParameter = .init()
-        ) -> EventLoopRes<Answer<T>, Errcase> {
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Compile Partial 查询", metadata: ["query": .string(query),])
@@ -70,14 +70,11 @@ public extension OPA {
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<T>.self)) 失败", category: .internal) {
+                try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<T?>.self)) 失败", category: .internal) {
                     try res.json().get()
                 }
-            }.flatMapThrowing { (res: Answer<T>) in
-                if let warns = res.warnings {
-                    logger.warnings("Partial 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+            }.flatMapThrowing { (res: Answer<T?>) in
+                res.logHintsIfHas(label: "Partial 查询", logger: logger)
                 logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Compile Partial 查询执行完成")
                 
@@ -108,7 +105,7 @@ public extension OPA {
             unknowns: [String],
             parameter: QueryParameter = .init(),
             as type: T.Type = UCASTTargetResult.self
-        ) -> EventLoopRes<Answer<T>, Errcase> {
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
             __dataFilter(
                 path: path,
                 input: input,
@@ -144,7 +141,7 @@ public extension OPA {
             unknowns: [String],
             parameter: QueryParameter = .init(),
             as type: T.Type = SQLTargetResult.self
-        ) -> EventLoopRes<Answer<T>, Errcase> {
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
             __dataFilter(
                 path: path,
                 input: input,
@@ -178,7 +175,7 @@ public extension OPA {
             unknowns: [String],
             parameter: QueryParameter = .init(),
             as type: T.Type = MultiTargetResult.self
-        ) -> EventLoopRes<Answer<T>, Errcase> {
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
             __dataFilter(
                 path: path,
                 input: input,
@@ -203,7 +200,7 @@ public extension OPA {
             unknowns: [String],
             parameter: QueryParameter = .init(),
             opName: String
-        ) -> EventLoopRes<Answer<T>, Errcase> {
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Compile \(opName) DataFilter 查询", metadata: ["path": .string(path),])
@@ -233,14 +230,11 @@ public extension OPA {
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<T>.self)) 失败", category: .internal) {
+                try required(throws: Errcase.responseParseFailed, "将结果解析为类型 \(String(describing: Answer<T?>.self)) 失败", category: .internal) {
                     try res.json(accept: accept).get()
                 }
-            }.flatMapThrowing { (res: Answer<T>) in
-                if let warns = res.warnings {
-                    logger.warnings("\(opName) 操作警告", paras: warns.map { (["warning": .data($0)], nil) })
-                }
-                
+            }.flatMapThrowing { (res: Answer<T?>) in
+                res.logHintsIfHas(label: "\(opName) 操作", logger: logger)
                 logger.info("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Compile \(opName) DataFilter 查询执行完成")
                 

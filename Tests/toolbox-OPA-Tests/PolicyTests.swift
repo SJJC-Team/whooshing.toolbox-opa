@@ -99,9 +99,9 @@ struct OPAPolicyTesting {
             #expect(res.metrics != nil)
         }
         
-        let r = try #require(try await opa.policy.get(at: id, as: [String: AnyCodable].self))
+        let r = try #require(try await opa.policy.get(at: id, as: [String: AnyCodable].self).result)
         
-        #expect(content == r.result.raw)
+        #expect(content == r.raw)
     }
     
     @Test("Policy 创建失败测试")
@@ -158,7 +158,7 @@ struct OPAPolicyTesting {
         }
         
         let res = try await opa.policy.get(at: id, as: [String: AnyCodable].self)
-        #expect(res == nil)
+        #expect(res.result == nil)
     }
     
     @Test("Policy 应当为空")
@@ -174,7 +174,7 @@ struct OPAPolicyTesting {
         let opa = try await TestingShared.getOPA()
         
         let res = try await opa.policy.get(at: "the_id_doesn_t_exist", as: AnyCodable.self)
-        #expect(res == nil)
+        #expect(res.result == nil)
     }
     
     @MainActor
