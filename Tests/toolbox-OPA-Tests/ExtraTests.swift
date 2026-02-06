@@ -61,10 +61,61 @@ struct OPAExtraTesting {
             as: AnyCodable.self
         )
 
-        print(res)
+        #expect(res.result == nil)
 
+        let ans = try await opa.query.data(
+            from: "/rules/id_1002/allow",
+            input: [
+                "action": AnyCodable("write"),
+                "resource": [
+                    "owner": [
+                        "name": "clwang"
+                    ],
+                    "lvl": 10
+                ]
+            ],
+            as: AnyCodable.self
+        )
+        
+        #expect(ans.result == true)
+        
+        let ans2 = try await opa.query.data(
+            from: "/rules/id_1002/allow",
+            input: [
+                "action": AnyCodable("write"),
+                "resource": [
+                    "owner": [
+                        "name": "clwang"
+                    ],
+                    "lvl": 4
+                ]
+            ],
+            as: AnyCodable.self
+        )
+        
+        #expect(ans2.result == nil)
     }
 
+    @Test("清理")
+    func clean() async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        let policies = try await opa.policy.list(as: AnyCodable.self)
+        
+        let policyPairs = policies.result.map { ($0.id, $0.raw) }
+
+        try await TestingShared.clean(policies: policyPairs)
+        
+        let data = try await opa.data.list(as: [String: AnyCodable].self)
+        try await emptyAll(data: data.result)
+        
+        func emptyAll(data: [String: AnyCodable]) async throws {
+            for (k, _) in data {
+                try await opa.data.delete(of: "/" + k)
+            }
+        }
+    }
+    
     @MainActor
     @Test("测试结束")
     func end() async throws {
