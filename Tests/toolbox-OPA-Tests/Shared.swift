@@ -15,6 +15,7 @@ struct TestingShared {
         case policy
         case query
         case compile
+        case extra
         case examples
     }
     

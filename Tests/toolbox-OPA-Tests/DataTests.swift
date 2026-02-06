@@ -295,8 +295,8 @@ struct OPADataTesting {
     @MainActor
     @Test("测试结束")
     func end() async throws {
-        TestingShared.testStage = .policy
         try! TestingShared.opa!.syncShutdown()
         TestingShared.opa = nil
+        TestingShared.testStage = .policy
     }
 }

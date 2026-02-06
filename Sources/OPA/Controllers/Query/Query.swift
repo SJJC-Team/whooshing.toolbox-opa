@@ -73,12 +73,15 @@ public extension OPA {
         ///   - type: 结果类型
         ///   - parameter: 查询参数
         /// - Returns: 包含结果的 Answer
+        ///     若路径 path 未找到(一般认为 false)，则该函数返回值 ans.result == nil
+        ///     若查询成功且结果为 undefined(一般认为 false)，则该函数返回值 ans.result == nil
+        ///     若查询成功且结果不为 undefined，则该函数返回值 ans.result 为预期值
         public func data<T: Encodable & Sendable, G: Decodable & Sendable>(
             from path: String,
             input: T,
             as type: G.Type = G.self,
             parameter: DataQueryParameter = .init()
-        ) -> EventLoopRes<Answer<G>?, Errcase> {
+        ) -> EventLoopRes<Answer<G?>, Errcase> {
             let logger = getRequestLogger()
             
             logger.info("执行 Data 查询", metadata: ["path": .string(path)])
@@ -92,28 +95,22 @@ public extension OPA {
                     "input" : AnyCodable(input)
                 ],
                 logger: logger,
-                validStatusCode: [.ok, .notFound],
+                validStatusCode: [.ok],
                 errorStatusCode: [
                     .badRequest: ("请求不合法", .external),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
-                if res.status == .notFound {
-                    return nil
-                }
+                let ans = try? res.json(as: Answer<G?>.self).get()
                 
-                return try required(throws: Errcase.responseParseFailed, metadata: ["target": "\(Answer<G>?.self)"], category: .internal) {
-                    try res.json().get()
-                }
-            }.flatMapThrowing { (res: Answer<G>?) in
-                if let warns = res?.warnings {
+                if let warns = ans?.warnings {
                     logger.warnings("Data 查询警告", paras: warns.map { (["warning": .data($0)], nil) })
                 }
                 
-                logger.debug("查询结果", metadata: ["result": res == nil ? "nil" : "\(res!)"])
+                logger.debug("查询结果", metadata: ["result": .data(ans)])
                 logger.info("Data 查询执行完成")
                 
-                return res
+                return ans ?? .init(result: nil)
             }.logIfFail(logger: logger)
         }
         

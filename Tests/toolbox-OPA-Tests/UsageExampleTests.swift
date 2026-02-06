@@ -280,8 +280,8 @@ struct UsageExampleTests {
                 parameter: .init(strictBuiltinErrors: false)
             ).get()
             
-            print("Data Query 结果: \(String(describing: dataResult?.result))")
-            #expect(dataResult?.result == true)
+            print("Data Query 结果: \(String(describing: dataResult.result))")
+            #expect(dataResult.result == true)
             
             // 4.2 Ad-hoc Query (临时查询)
             // 路径: /v1/query

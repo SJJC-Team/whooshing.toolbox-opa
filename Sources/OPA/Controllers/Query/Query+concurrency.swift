@@ -20,7 +20,7 @@ public extension OPA.QueryController {
         input: T,
         as type: G.Type = G.self,
         parameter: DataQueryParameter = .init()
-    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<G>? {
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<G?> {
         try await data(
             from: path,
             input: input,

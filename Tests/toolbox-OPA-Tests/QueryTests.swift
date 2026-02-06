@@ -234,10 +234,10 @@ struct OPAQueryTesting {
         
         try await TestingShared.prepare(datas: datas, policies: policies)
         
-        let queryRes = try #require(try await opa.query.data(from: path, input: input, as: AnyCodable.self))
+        let queryRes = try await opa.query.data(from: path, input: input, as: AnyCodable.self)
         #expect(queryRes.result == result)
         
-        for (name, key, value) in [(String, OPA.QueryController.DataQueryParameter, @Sendable (OPA.Answer<AnyCodable>) -> Bool)](
+        for (name, key, value) in [(String, OPA.QueryController.DataQueryParameter, @Sendable (OPA.Answer<AnyCodable?>) -> Bool)](
             arrayLiteral:
             ("pretty 测试", .init(pretty: true), { _ in true }),
             ("provenance 测试", .init(provenance: true), { $0.provenance != nil }),
@@ -246,7 +246,7 @@ struct OPAQueryTesting {
             ("instrument 测试", .init(instrument: true), { $0.metrics?.histogramEvalOpPlug != nil && $0.metrics?.histogramEvalOpResolve != nil }),
             ("strictBuiltinErrors 测试", .init(strictBuiltinErrors: true), { _ in true })
         ) {
-            let dataOutput = try #require(try await opa.query.data(from: path, input: input, as: AnyCodable.self, parameter: key), .init(stringLiteral: name))
+            let dataOutput = try await opa.query.data(from: path, input: input, as: AnyCodable.self, parameter: key)
             #expect(result == dataOutput.result, .init(stringLiteral: name))
             #expect(dataOutput.warnings == nil, .init(stringLiteral: name))
             #expect(value(dataOutput), .init(stringLiteral: name))
@@ -294,12 +294,27 @@ struct OPAQueryTesting {
         try await TestingShared.clean(policies: policies)
     }
     
+    @Test("OPA Data 无效路径测试")
+    func unvalidPathDataQuery() async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        let ans = try await opa.query.data(
+            from: "/the/path/doesn/t/exist",
+            input: [
+                "doesn't": "exist"
+            ],
+            as: AnyCodable.self
+        )
+        
+        #expect(ans.result == nil)
+    }
+    
     @MainActor
     @Test("测试结束")
     func end() async throws {
-        TestingShared.testStage = .compile
         try! await TestingShared.opa!.shutdown()
         TestingShared.opa = nil
+        TestingShared.testStage = .compile
     }
 }
 

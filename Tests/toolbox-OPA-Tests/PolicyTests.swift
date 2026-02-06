@@ -180,8 +180,8 @@ struct OPAPolicyTesting {
     @MainActor
     @Test("测试结束")
     func end() async throws {
-        TestingShared.testStage = .query
         try! await TestingShared.opa!.shutdown().get()
         TestingShared.opa = nil
+        TestingShared.testStage = .query
     }
 }

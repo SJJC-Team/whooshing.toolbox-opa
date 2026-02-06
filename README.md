@@ -163,7 +163,7 @@ let allowed = try await opa.query.data(
     parameter: .init(strictBuiltinErrors: false)
 ).get()
 
-if allowed?.result == true {
+if allowed.result == true {
     print("Access Granted")
 }
 ```
