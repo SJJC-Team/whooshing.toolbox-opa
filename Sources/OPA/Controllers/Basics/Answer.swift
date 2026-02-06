@@ -164,6 +164,10 @@ extension OPA.Answer: Loggerable, CustomStringConvertible {
         let resDesc = (result as? CustomStringConvertible)?.description ?? "\(result)"
         info.append("result=\(resDesc)")
         
+        if let hints = hints {
+            info.append("hints=\(hints)")
+        }
+        
         if let warnings = warnings {
             info.append("warnings=\(warnings)")
         }
