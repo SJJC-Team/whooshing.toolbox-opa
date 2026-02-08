@@ -153,6 +153,20 @@ public extension OPA {
     }
 }
 
+public extension OPA.Answer {
+    func asNull() -> OPA.Answer<OPA.NULL> {
+        .init(
+            result: .init(),
+            hints: hints,
+            warnings: warnings,
+            decisionId: decisionId,
+            metrics: metrics,
+            explanation: explanation,
+            provenance: provenance
+        )
+    }
+}
+
 extension OPA.Answer: Loggerable, CustomStringConvertible {
     public var description: String {
         var info: [String] = []

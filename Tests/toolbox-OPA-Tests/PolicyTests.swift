@@ -177,6 +177,25 @@ struct OPAPolicyTesting {
         #expect(res.result == nil)
     }
     
+    @Test("Policy Check 测试")
+    func policyCheck() async throws {
+        let opa = try await TestingShared.getOPA()
+        
+        let result = try await opa.policy.check(policy: "input.servers[i].ports[_] = \"p2\"; input.servers[i].name = name")
+        
+        switch result {
+        case .success(let r): print(r)
+        case .failure: #expect(Bool(false))
+        }
+        
+        let result2 = try await opa.policy.check(policy: "input.servers[1i].ports[_] = \"p2\"; input.servers[i].name = name")
+        
+        switch result2 {
+        case .success: #expect(Bool(false))
+        case .failure(let error): #expect(error.errors != nil)
+        }
+    }
+    
     @MainActor
     @Test("测试结束")
     func end() async throws {

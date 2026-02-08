@@ -1,3 +1,5 @@
+@preconcurrency import AnyCodable
+
 public extension OPA.PolicyController {
     @discardableResult
     func save(
@@ -25,7 +27,7 @@ public extension OPA.PolicyController {
     
     func get<T: Decodable & Sendable>(
         at id: String,
-        as type: T.Type = T.self,
+        as type: T.Type = [String: AnyCodable].self,
         parameter: GetQueryParameter = .init()
     ) async throws(OPA.Errcase.ErrType) -> PolicyAnswer<T> {
         try await get(
@@ -36,10 +38,16 @@ public extension OPA.PolicyController {
     }
     
     func list<T: Decodable & Sendable>(
-        as type: T.Type = T.self
+        as type: T.Type = [String: AnyCodable].self
     ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<[PolicyResult<T>]> {
         try await list(
             as: type
         ).get()
+    }
+    
+    func check(
+        policy: String
+    ) async throws(OPA.Errcase.ErrType) -> Result<OPA.Answer<OPA.NULL>, OPA.Err> {
+        try await check(policy: policy).get()
     }
 }
