@@ -49,8 +49,11 @@ public extension OPA.CompileController {
 extension OPA.CompileController.SQLTargetResult: Loggerable, CustomStringConvertible {
     public var description: String {
         """
-        sql_target:
-          query: \(query)
+        -------------------------------------------
+        SQL Target Query Result:
+        
+        \(query)
+        -------------------------------------------
         """
     }
 }
@@ -58,31 +61,78 @@ extension OPA.CompileController.SQLTargetResult: Loggerable, CustomStringConvert
 // MARK: - UCASTTargetResult Description
 extension OPA.CompileController.UCASTTargetResult: Loggerable, CustomStringConvertible {
     public var description: String {
+        let indent = "    "
+        
+        var output = """
+        -------------------------------------------
+        UCAST Target Query Result:
+        
         """
-        ucast_target:
-          query: \(query)
-        """
+        
+        let formattedQuery = formatQuery(query)
+        
+        let indentedQuery = formattedQuery.components(separatedBy: .newlines)
+                                          .joined(separator: "\n")
+        
+        output += "\n\(indentedQuery)"
+        output += "\n-------------------------------------------"
+
+        return output
     }
 }
 
 // MARK: - MultiTargetResult Description
+
 extension OPA.CompileController.MultiTargetResult: Loggerable, CustomStringConvertible {
     public var description: String {
-        var lines: [String] = ["multi_target:"]
+        let indent = "    "
+        var sections: [String] = []
         
-        // 内部辅助函数：处理包装后的 Value
-        func add<T>(_ label: String, _ value: Value<T>?) {
-            guard let value = value else { return }
-            lines.append("  \(label): \(value.query)")
+        // 1. 处理 UCAST (JSON 结构)
+        if let ucastResult = ucast {
+            let formattedJSON = formatQuery(ucastResult.query)
+            let indentedJSON = formattedJSON.components(separatedBy: .newlines)
+                                            .joined(separator: "\n")
+            sections.append("UCAST: \(indentedJSON)")
         }
-
-        // 逐一检查并添加非空目标
-        add("ucast", ucast)
-        add("postgresql", postgresql)
-        add("mysql", mysql)
-        add("sqlserver", sqlserver)
-        add("sqlite", sqlite)
         
-        return lines.joined(separator: "\n")
+        // 2. 处理 SQL 目标 (String 结构)
+        // 我们可以定义一个统一的闭包来处理 SQL 类型的打印
+        let addSQLSection = { (name: String, query: String?) in
+            if let q = query {
+                sections.append("\(name):\n\(q)")
+            }
+        }
+        
+        addSQLSection("PostgreSQL", postgresql?.query)
+        addSQLSection("MySQL", mysql?.query)
+        addSQLSection("SQL Server", sqlserver?.query)
+        addSQLSection("SQLite", sqlite?.query)
+        
+        // 3. 组装最终输出
+        guard !sections.isEmpty else {
+            return "-------------------------------------------\nMultiTargetResult: [EMPTY]\n-------------------------------------------"
+        }
+        
+        let body = sections.joined(separator: "\n\n")
+        return """
+        -------------------------------------------
+        Multi-Target Compile Results:
+        
+        \(body)
+        -------------------------------------------
+        """
+    }
+}
+
+func formatQuery(_ query: [String: AnyCodable]) -> String {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    
+    do {
+        let data = try encoder.encode(query)
+        return String(data: data, encoding: .utf8) ?? "\(query)"
+    } catch {
+        return "\(query)"
     }
 }

@@ -289,6 +289,49 @@ struct OPACompileTesting {
                     ]
                 ]
             }
+        ),
+        (
+            [],
+            [(
+                "authz",
+                """
+                package authz
+                # METADATA
+                # compile:
+                #   unknowns: [input.users, input.subscriptions]
+                
+                # 此时 Rego 编译器会认为 users 和 subscriptions 是 input 的子项，是安全的
+                allow if {
+                    input.users.status == "active"
+                    input.subscriptions.plan == input.required_plan
+                }
+                """
+            )],
+            "/authz/allow",
+            ["required_plan": "premium"],
+            .prisma,
+            .init(),
+            ["input.users", "input.subscriptions"],
+            {
+                $0.result?.query == [
+                    "operator": "and",
+                    "type": "compound",
+                    "value": [
+                        [
+                            "field": "users.status",
+                            "operator": "eq",
+                            "type": "field",
+                            "value": "active"
+                        ],
+                        [
+                            "field": "subscriptions.plan",
+                            "operator": "eq",
+                            "type": "field",
+                            "value": "premium"
+                        ]
+                    ]
+                ]
+            }
         )
     ]
     
