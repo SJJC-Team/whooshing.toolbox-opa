@@ -26,12 +26,35 @@ public extension OPA {
         ///   - data: 要保存的数据内容
         ///   - parameter: 保存参数（可包含 metrics）
         /// - Returns: `True` 表示创建成功，`False` 表示未修改（即内容未变或 ifNoneMatch 检查失败）
+        public func save(
+            on path: String,
+            ifNoneMatch: String? = "*",
+            data: [String: AnyCodable],
+            parameter: SaveQueryParameter = .init()
+        ) -> EventLoopRes<Answer<Bool>, Errcase> {
+            save(
+                on: path,
+                ifNoneMatch: ifNoneMatch,
+                data: data,
+                parameter: parameter,
+                as: [String: AnyCodable].self
+            )
+        }
+        
+        /// 创建或覆盖文档
+        ///
+        /// - Parameters:
+        ///   - path: 数据路径（例如 "/users/alice"）
+        ///   - ifNoneMatch: 用于并发控制，设为 "*" 表示仅当路径不存在时创建
+        ///   - data: 要保存的数据内容
+        ///   - parameter: 保存参数（可包含 metrics）
+        /// - Returns: `True` 表示创建成功，`False` 表示未修改（即内容未变或 ifNoneMatch 检查失败）
         public func save<T: Encodable & Sendable>(
             on path: String,
             ifNoneMatch: String? = "*",
             data: T,
             parameter: SaveQueryParameter = .init(),
-            as type: T.Type = [String: AnyCodable].self
+            as type: T.Type
         ) -> EventLoopRes<Answer<Bool>, Errcase> {
             let logger = getRequestLogger()
             

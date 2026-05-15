@@ -2,12 +2,27 @@
 
 public extension OPA.DataController {
     @discardableResult
+    func save(
+        on path: String,
+        ifNoneMatch: String? = "*",
+        data: [String: AnyCodable],
+        parameter: SaveQueryParameter = .init()
+    ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<Bool> {
+        try await save(
+            on: path,
+            ifNoneMatch: ifNoneMatch,
+            data: data,
+            parameter: parameter
+        ).get()
+    }
+    
+    @discardableResult
     func save<T: Encodable & Sendable>(
         on path: String,
         ifNoneMatch: String? = "*",
         data: T,
         parameter: SaveQueryParameter = .init(),
-        as type: T.Type = [String: AnyCodable].self
+        as type: T.Type
     ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<Bool> {
         try await save(
             on: path,

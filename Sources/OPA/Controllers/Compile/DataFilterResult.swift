@@ -61,8 +61,6 @@ extension OPA.CompileController.SQLTargetResult: Loggerable, CustomStringConvert
 // MARK: - UCASTTargetResult Description
 extension OPA.CompileController.UCASTTargetResult: Loggerable, CustomStringConvertible {
     public var description: String {
-        let indent = "    "
-        
         var output = """
         -------------------------------------------
         UCAST Target Query Result:
@@ -85,7 +83,6 @@ extension OPA.CompileController.UCASTTargetResult: Loggerable, CustomStringConve
 
 extension OPA.CompileController.MultiTargetResult: Loggerable, CustomStringConvertible {
     public var description: String {
-        let indent = "    "
         var sections: [String] = []
         
         // 1. 处理 UCAST (JSON 结构)

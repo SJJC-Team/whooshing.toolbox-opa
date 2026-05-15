@@ -28,12 +28,34 @@ public extension OPA {
         ///   - type: 结果类型
         ///   - parameter: 查询参数
         /// - Returns: 查询结果
+        public func simple<T: Decodable & Sendable>(
+            input: [String: AnyCodable],
+            to returnType: T.Type = [String: AnyCodable].self,
+            parameter: SimpleQueryParameter = .init()
+        ) -> EventLoopRes<T, Errcase> {
+            simple(
+                input: input,
+                as: [String: AnyCodable].self,
+                to: returnType,
+                parameter: parameter
+            )
+        }
+        
+        /// 简单查询
+        ///
+        /// 向 OPA 根路径 `/` 发送请求，通常用于查询 `default` 决策。
+        ///
+        /// - Parameters:
+        ///   - input: 输入数据
+        ///   - type: 结果类型
+        ///   - parameter: 查询参数
+        /// - Returns: 查询结果
         public func simple<
             G: Encodable & Sendable,
             T: Decodable & Sendable
         >(
             input: G,
-            as type: G.Type = [String: AnyCodable].self,
+            as type: G.Type,
             to returnType: T.Type = [String: AnyCodable].self,
             parameter: SimpleQueryParameter = .init()
         ) -> EventLoopRes<T, Errcase> {
@@ -77,10 +99,38 @@ public extension OPA {
         ///     若路径 path 未找到(一般认为 false)，则该函数返回值 ans.result == nil
         ///     若查询成功且结果为 undefined(一般认为 false)，则该函数返回值 ans.result == nil
         ///     若查询成功且结果不为 undefined，则该函数返回值 ans.result 为预期值
+        public func data<T: Decodable & Sendable>(
+            from path: String,
+            input: [String: AnyCodable],
+            to returnType: T.Type = [String: AnyCodable].self,
+            parameter: DataQueryParameter = .init()
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
+            data(
+                from: path,
+                input: input,
+                as: [String: AnyCodable].self,
+                to: T.self,
+                parameter: parameter
+            )
+        }
+        
+        /// 数据路径查询
+        ///
+        /// 查询 OPA 中指定路径的数据或策略决策（例如 `/v1/data/authz/allow`）。
+        ///
+        /// - Parameters:
+        ///   - path: 数据路径
+        ///   - input: 输入数据
+        ///   - type: 结果类型
+        ///   - parameter: 查询参数
+        /// - Returns: 包含结果的 Answer
+        ///     若路径 path 未找到(一般认为 false)，则该函数返回值 ans.result == nil
+        ///     若查询成功且结果为 undefined(一般认为 false)，则该函数返回值 ans.result == nil
+        ///     若查询成功且结果不为 undefined，则该函数返回值 ans.result 为预期值
         public func data<T: Encodable & Sendable, G: Decodable & Sendable>(
             from path: String,
             input: T,
-            as type: T.Type = [String: AnyCodable].self,
+            as type: T.Type,
             to returnType: G.Type = [String: AnyCodable].self,
             parameter: DataQueryParameter = .init()
         ) -> EventLoopRes<Answer<G?>, Errcase> {
@@ -124,13 +174,39 @@ public extension OPA {
         ///   - type: 预期结果的数据类型
         ///   - parameter: 查询配置参数
         /// - Returns: `EventLoopRes<Answer<T?>, Errcase>` 包含查询结果的 Future 对象
+        public func adhoc<T: Decodable & Sendable>(
+            query: String,
+            input: [String: AnyCodable],
+            to returnType: T.Type = [String: AnyCodable].self,
+            parameter: AdhocQueryParameter = .init()
+        ) -> EventLoopRes<Answer<T?>, Errcase> {
+            adhoc(
+                query: query,
+                input: input,
+                as: [String: AnyCodable].self,
+                to: T.self,
+                parameter: parameter
+            )
+        }
+        
+        /// Ad-hoc 查询
+        ///
+        /// 允许客户端发送任意的 Rego 查询语句并在 OPA 上执行，而无需在服务器上预先保存策略。
+        /// 适用于动态生成查询或调试目的。
+        ///
+        /// - Parameters:
+        ///   - query: Rego 查询语句 (例如: `data.authz.allow == true`)
+        ///   - input: 输入数据对象 (作为 `input` 全局变量在查询中使用)
+        ///   - type: 预期结果的数据类型
+        ///   - parameter: 查询配置参数
+        /// - Returns: `EventLoopRes<Answer<T?>, Errcase>` 包含查询结果的 Future 对象
         public func adhoc<
             G: Encodable & Sendable,
             T: Decodable & Sendable
         >(
             query: String,
             input: G,
-            as type: G.Type = [String: AnyCodable].self,
+            as type: G.Type,
             to returnType: T.Type = [String: AnyCodable].self,
             parameter: AdhocQueryParameter = .init()
         ) -> EventLoopRes<Answer<T?>, Errcase> {
