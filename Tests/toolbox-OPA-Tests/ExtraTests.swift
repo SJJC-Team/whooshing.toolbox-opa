@@ -47,6 +47,7 @@ struct OPAExtraTesting {
         }  
         """)
 
+        // 路径不存在，因此返回 nil
         let res = try await opa.query.data(
             from: "/id_test_002/allow",
             input: [
@@ -58,11 +59,12 @@ struct OPAExtraTesting {
                     "lvl": 10
                 ]
             ],
-            as: AnyCodable.self
+            to: Bool.self
         )
 
         #expect(res.result == nil)
 
+        // 路径正确，且允许访问，返回 true
         let ans = try await opa.query.data(
             from: "/rules/id_1002/allow",
             input: [
@@ -74,11 +76,12 @@ struct OPAExtraTesting {
                     "lvl": 10
                 ]
             ],
-            as: AnyCodable.self
+            to: Bool.self
         )
         
         #expect(ans.result == true)
         
+        // 路径正确，但拒绝访问访问，返回 nil
         let ans2 = try await opa.query.data(
             from: "/rules/id_1002/allow",
             input: [
@@ -90,7 +93,7 @@ struct OPAExtraTesting {
                     "lvl": 4
                 ]
             ],
-            as: AnyCodable.self
+            to: Bool.self
         )
         
         #expect(ans2.result == nil)

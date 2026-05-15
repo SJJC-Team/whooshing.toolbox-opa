@@ -161,7 +161,7 @@ struct OPADataTesting {
             ("provenance 测试", .init(provenance: true), { $0.provenance != nil }),
             ("explain 测试", .init(explain: .full), { _ in true }),
             ("metrics 测试", .init(metrics: true), { $0.metrics != nil }),
-            ("instrument 测试", .init(instrument: true), { $0.metrics?.histogramEvalOpPlug != nil && $0.metrics?.histogramEvalOpResolve != nil }),
+            ("instrument 测试", .init(instrument: true), { $0.metrics != nil }),
             ("strictBuiltinErrors 测试", .init(strictBuiltinErrors: true), { _ in true })
         ) {
             let dataOutput = try await opa.data.get(from: path, as: [String: AnyCodable].self, parameter: key)

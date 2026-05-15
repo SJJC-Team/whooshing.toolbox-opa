@@ -170,30 +170,40 @@ public extension OPA.Answer {
 extension OPA.Answer: Loggerable, CustomStringConvertible {
     public var description: String {
         var info: [String] = []
-
+        
+        info.append("-------------------------------------------")
+        
+        info.append("OPA Answer: \n")
+        
         if let dId = decisionId {
-            info.append("id=\(dId)")
+            info.append("id: \(dId)")
         }
         
-        let resDesc = (result as? CustomStringConvertible)?.description ?? "\(result)"
-        info.append("result=\(resDesc)")
+        if let json = result as? [String: AnyCodable] {
+            info.append("result: \(formatQuery(json))")
+        } else {
+            let resDesc = (result as? CustomStringConvertible)?.description ?? "\(result)"
+            info.append("result: \(resDesc)")
+        }
         
         if let hints = hints {
-            info.append("hints=\(hints)")
+            info.append("hints: \(hints)")
         }
         
         if let warnings = warnings {
-            info.append("warnings=\(warnings)")
+            info.append("warnings: \(warnings)")
         }
         
         if let metrics = metrics {
-            info.append("metrics=[\(metrics)]")
+            info.append("metrics: [\(metrics)]")
         }
         
         if let explanation = explanation {
-            info.append("explanation=\(explanation)")
+            info.append("explanation: \(explanation)")
         }
         
-        return info.joined(separator: "; ")
+        info.append("-------------------------------------------")
+        
+        return info.joined(separator: "\n")
     }
 }

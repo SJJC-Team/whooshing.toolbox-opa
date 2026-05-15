@@ -33,7 +33,8 @@ public extension OPA {
             T: Decodable & Sendable
         >(
             input: G,
-            as type: T.Type = T.self,
+            as type: G.Type = [String: AnyCodable].self,
+            to returnType: T.Type = [String: AnyCodable].self,
             parameter: SimpleQueryParameter = .init()
         ) -> EventLoopRes<T, Errcase> {
             let logger = getRequestLogger()
@@ -79,7 +80,8 @@ public extension OPA {
         public func data<T: Encodable & Sendable, G: Decodable & Sendable>(
             from path: String,
             input: T,
-            as type: G.Type = G.self,
+            as type: T.Type = [String: AnyCodable].self,
+            to returnType: G.Type = [String: AnyCodable].self,
             parameter: DataQueryParameter = .init()
         ) -> EventLoopRes<Answer<G?>, Errcase> {
             let logger = getRequestLogger()
@@ -128,7 +130,8 @@ public extension OPA {
         >(
             query: String,
             input: G,
-            as type: T.Type = T.self,
+            as type: G.Type = [String: AnyCodable].self,
+            to returnType: T.Type = [String: AnyCodable].self,
             parameter: AdhocQueryParameter = .init()
         ) -> EventLoopRes<Answer<T?>, Errcase> {
             let logger = getRequestLogger()

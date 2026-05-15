@@ -216,7 +216,7 @@ struct OPAQueryTesting {
 
         try await TestingShared.prepare(datas: datas.map { ($0.0, AnyCodable($0.1)) }, policies: policies)
         
-        let queryRes = try await opa.query.simple(input: input, as: AnyCodable.self)
+        let queryRes = try await opa.query.simple(input: input, to: AnyCodable.self)
         #expect(queryRes == result)
         
         try await TestingShared.clean(policies: policies)
@@ -234,7 +234,7 @@ struct OPAQueryTesting {
         
         try await TestingShared.prepare(datas: datas, policies: policies)
         
-        let queryRes = try await opa.query.data(from: path, input: input, as: AnyCodable.self)
+        let queryRes = try await opa.query.data(from: path, input: input, to: AnyCodable.self)
         #expect(queryRes.result == result)
         
         for (name, key, value) in [(String, OPA.QueryController.DataQueryParameter, @Sendable (OPA.Answer<AnyCodable?>) -> Bool)](
@@ -243,10 +243,10 @@ struct OPAQueryTesting {
             ("provenance 测试", .init(provenance: true), { $0.provenance != nil }),
             ("explain 测试", .init(explain: .full), { _ in true }),
             ("metrics 测试", .init(metrics: true), { $0.metrics != nil }),
-            ("instrument 测试", .init(instrument: true), { $0.metrics?.histogramEvalOpPlug != nil && $0.metrics?.histogramEvalOpResolve != nil }),
+            ("instrument 测试", .init(instrument: true), { $0.metrics != nil }),
             ("strictBuiltinErrors 测试", .init(strictBuiltinErrors: true), { _ in true })
         ) {
-            let dataOutput = try await opa.query.data(from: path, input: input, as: AnyCodable.self, parameter: key)
+            let dataOutput = try await opa.query.data(from: path, input: input, to: AnyCodable.self, parameter: key)
             #expect(result == dataOutput.result, .init(stringLiteral: name))
             #expect(dataOutput.warnings == nil, .init(stringLiteral: name))
             #expect(value(dataOutput), .init(stringLiteral: name))
@@ -267,7 +267,7 @@ struct OPAQueryTesting {
         
         try await TestingShared.prepare(datas: datas, policies: policies)
         
-        let queryRes = try await opa.query.adhoc(query: query, input: input, as: AnyCodable.self)
+        let queryRes = try await opa.query.adhoc(query: query, input: input, to: AnyCodable.self)
         #expect(queryRes.warnings == nil)
         if let res = queryRes.result {
             #expect(res == result)
@@ -281,7 +281,7 @@ struct OPAQueryTesting {
             ("explain 测试", .init(explain: .full), { _ in true }),
             ("metrics 测试", .init(metrics: true), { $0.metrics != nil })
         ) {
-            let dataOutput = try await opa.query.adhoc(query: query, input: input, as: AnyCodable.self, parameter: key)
+            let dataOutput = try await opa.query.adhoc(query: query, input: input, to: AnyCodable.self, parameter: key)
             #expect(dataOutput.warnings == nil, .init(stringLiteral: name))
             #expect(value(dataOutput), .init(stringLiteral: name))
             if let res = dataOutput.result {

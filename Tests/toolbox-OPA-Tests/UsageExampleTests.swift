@@ -179,7 +179,8 @@ struct UsageExampleTests {
             let userInfo = UserInfo(role: "deployer", age: 30)
             let saveResult = try await opa.data.save(
                 on: dataPath,
-                data: userInfo
+                data: AnyCodable(userInfo),
+                as: AnyCodable.self
             ).get()
             
             print("数据保存成功")
@@ -275,8 +276,9 @@ struct UsageExampleTests {
             
             let dataResult = try await opa.query.data(
                 from: "/query/example/allow", // 对应 package query.example 中的 allow 规则
-                input: input1,                // 传递给 OPA 的 input 全局变量
-                as: Bool.self,                // 预期返回 Bool 类型 (allow 是 boolean)
+                input: AnyCodable(input1),                // 传递给 OPA 的 input 全局变量
+                as: AnyCodable.self,
+                to: Bool.self,                // 预期返回 Bool 类型 (allow 是 boolean)
                 parameter: .init(strictBuiltinErrors: false)
             ).get()
             
@@ -292,8 +294,9 @@ struct UsageExampleTests {
             
             let adhocResult = try await opa.query.adhoc(
                 query: adhocQuery,
-                input: input3,
-                as: Bool.self
+                input: AnyCodable(input3),
+                as: AnyCodable.self,
+                to: Bool.self
             ).get()
             
             print("Ad-hoc Query 结果 (Bool): \(String(describing: adhocResult.result))")
@@ -302,7 +305,7 @@ struct UsageExampleTests {
             // 因为结果可能是一个 ResultSet (一组满足条件的变量绑定)
             let adhocRawResult = try await opa.query.adhoc(
                 query: adhocQuery,
-                input: input3,
+                input: AnyCodable(input3),
                 as: AnyCodable.self
             ).get()
             

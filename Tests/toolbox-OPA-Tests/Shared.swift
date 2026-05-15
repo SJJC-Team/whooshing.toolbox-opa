@@ -66,7 +66,7 @@ struct TestingShared {
         let opa = try await TestingShared.getOPA()
         
         for data in datas {
-            let res = try await opa.data.save(on: data.0, data: data.1)
+            let res = try await opa.data.save(on: data.0, data: data.1, as: AnyCodable.self)
             #expect(res.result == true)
         }
         

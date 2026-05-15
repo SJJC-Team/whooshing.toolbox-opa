@@ -182,7 +182,14 @@ public extension OPA {
             }.logIfFail(logger: logger)
         }
         
-        /// 策略语法检查
+        /// 策略语法检查，仅提供策略体的语法检查，而非整个策略
+        /// 比如 `input.user.name == "XXX"` 而非 ```
+        /// package xxx
+        ///
+        /// allow if {
+        ///     true
+        /// }
+        /// ```
         ///
         /// - Parameter policy: 要检查的策略
         /// - Returns:
@@ -232,6 +239,27 @@ public extension OPA {
         }
     }
 }
+
+extension OPA.PolicyController {
+    func getRegalBinaryName() -> String? {
+        #if os(macOS)
+            #if arch(arm64)
+            return "regal-Darwin-arm64"
+            #else
+            return "regal-Darwin-x86_64"
+            #endif
+        #elseif os(linux)
+            #if arch(arm64)
+            return "regal-Linux-arm64"
+            #else
+            return "regal-Linux-x86_64"
+            #endif
+        #else
+        return nil
+        #endif
+    }
+}
+
 
 extension OPA.PolicyController.PolicyResult: Loggerable, CustomStringConvertible {
     public var description: String {

@@ -1,16 +1,20 @@
+@preconcurrency import AnyCodable
+
 public extension OPA.DataController {
     @discardableResult
     func save<T: Encodable & Sendable>(
         on path: String,
         ifNoneMatch: String? = "*",
         data: T,
-        parameter: SaveQueryParameter = .init()
+        parameter: SaveQueryParameter = .init(),
+        as type: T.Type = [String: AnyCodable].self
     ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<Bool> {
         try await save(
             on: path,
             ifNoneMatch: ifNoneMatch,
             data: data,
-            parameter: parameter
+            parameter: parameter,
+            as: type
         ).get()
     }
     
@@ -37,7 +41,7 @@ public extension OPA.DataController {
     }
     
     func list<G: Decodable & Sendable>(
-        as type: G.Type = G.self,
+        as type: G.Type = [String: AnyCodable].self,
         parameter: GetQueryParameter = .init()
     ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<G> {
         try await list(
@@ -48,7 +52,7 @@ public extension OPA.DataController {
     
     func get<G: Decodable & Sendable>(
         from path: String,
-        as type: G.Type = G.self,
+        as type: G.Type = [String: AnyCodable].self,
         parameter: GetQueryParameter = .init()
     ) async throws(OPA.Errcase.ErrType) -> OPA.Answer<G?> {
         try await get(

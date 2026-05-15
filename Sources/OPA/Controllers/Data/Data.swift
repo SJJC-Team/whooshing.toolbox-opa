@@ -30,7 +30,8 @@ public extension OPA {
             on path: String,
             ifNoneMatch: String? = "*",
             data: T,
-            parameter: SaveQueryParameter = .init()
+            parameter: SaveQueryParameter = .init(),
+            as type: T.Type = [String: AnyCodable].self
         ) -> EventLoopRes<Answer<Bool>, Errcase> {
             let logger = getRequestLogger()
             
@@ -150,7 +151,7 @@ public extension OPA {
         ///   - parameter: 查询参数
         /// - Returns: 包含数据的 Answer
         public func list<G: Decodable & Sendable>(
-            as type: G.Type = G.self,
+            as type: G.Type = [String: AnyCodable].self,
             parameter: GetQueryParameter = .init()
         ) -> EventLoopRes<Answer<G>, Errcase> {
             get(from: "", as: G.self, parameter: parameter).map { res in
@@ -171,7 +172,7 @@ public extension OPA {
         /// - Returns: 包含数据的 Answer，如果不存在则 ans.result == nil
         public func get<G: Decodable & Sendable>(
             from path: String,
-            as type: G.Type = G.self,
+            as type: G.Type = [String: AnyCodable].self,
             parameter: GetQueryParameter = .init()
         ) -> EventLoopRes<Answer<G?>, Errcase> {
             let logger = getRequestLogger()
