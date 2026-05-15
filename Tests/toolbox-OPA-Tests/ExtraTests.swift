@@ -21,6 +21,7 @@ struct OPAExtraTesting {
         
         try await opa.policy.save(by: "id_test_001", content: """
         package rules.id_1001
+        default allow := false
         allow if {
             input.resource.owner.name == input.user.name
             input.action == "read"
@@ -29,6 +30,7 @@ struct OPAExtraTesting {
 
         try await opa.policy.save(by: "id_test_002", content: """
         package rules.id_1002
+        default allow := false
         allow if {
             input.resource.lvl >= 5
             input.action == "write"
@@ -39,6 +41,7 @@ struct OPAExtraTesting {
         package authz
 
         import data.rules
+        default allow := false
 
         allow if {
             some rule_id
@@ -96,7 +99,7 @@ struct OPAExtraTesting {
             to: Bool.self
         )
         
-        #expect(ans2.result == nil)
+        #expect(ans2.result == false)
         
         try await clean()
     }

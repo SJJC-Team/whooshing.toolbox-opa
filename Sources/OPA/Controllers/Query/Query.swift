@@ -125,7 +125,7 @@ public extension OPA {
         ///   - parameter: 查询参数
         /// - Returns: 包含结果的 Answer
         ///     若路径 path 未找到(一般认为 false)，则该函数返回值 ans.result == nil
-        ///     若查询成功且结果为 undefined(一般认为 false)，则该函数返回值 ans.result == nil
+        ///     若查询成功且结果为 undefined(无法确认是何值，一般原因为未指定 default 值导致的，一般认为 false)，则该函数返回值 ans.result == nil
         ///     若查询成功且结果不为 undefined，则该函数返回值 ans.result 为预期值
         public func data<T: Encodable & Sendable, G: Decodable & Sendable>(
             from path: String,
