@@ -23,6 +23,6 @@ jobs:
 
       with_eopa_host: "localhost"
       with_eopa_port: 8181
-      with_eopa_version: "v1.13.1"
+      with_eopa_version: "v1.45.1"
 
     secrets: inherit
