@@ -1,5 +1,5 @@
 {
-  "originHash" : "7dd24f285a91c4a391f3652d3f7ca1c003f466f7c0b26c928aba2ad0f23c4a67",
+  "originHash" : "26031671153b35295479a49dbb3895f63f03532622fe5fb58c4acfe5dac14e5a",
   "pins" : [
     {
       "identity" : "anycodable",
@@ -22,7 +22,7 @@
     {
       "identity" : "puppy",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SJJC-Team/Puppy.git",
+      "location" : "https://github.com/whooshing-workshop/Puppy.git",
       "state" : {
         "revision" : "b9c0edb07d9318106096f16ebb110d5314d05b42",
         "version" : "0.9.1"
@@ -211,10 +211,10 @@
     {
       "identity" : "whooshing.toolbox-basic",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/SJJC-Team/whooshing.toolbox-basic.git",
+      "location" : "https://github.com/whooshing-workshop/whooshing.toolbox-basic.git",
       "state" : {
-        "revision" : "36a99423d0a7125c70a4af28060c0ea6a9080a3a",
-        "version" : "1.5.0"
+        "revision" : "10e1abdaca8b4118007bc0a9cbbcfc2658b97feb",
+        "version" : "1.5.2"
       }
     }
   ],
