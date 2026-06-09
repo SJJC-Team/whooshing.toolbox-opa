@@ -82,8 +82,8 @@ public extension OPA {
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
                 ans?.logHintsIfHas(label: "Save 操作", logger: logger)
-                logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Save 操作执行完成", metadata: ["result": .data(r)])
+                logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
                 
                 return ans == nil ? .init(result: r) : ans!.set(result: r)
             }.logIfFail(logger: logger)
@@ -118,8 +118,8 @@ public extension OPA {
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
                 ans?.logHintsIfHas(label: "Delete 操作", logger: logger)
-                logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Delete 操作执行完成")
+                logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 
                 return ans == nil ? .init(result: .init()) : ans!.set(result: NULL())
             }.logIfFail(logger: logger)
@@ -160,8 +160,8 @@ public extension OPA {
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
                 ans?.logHintsIfHas(label: "Patch 操作", logger: logger)
-                logger.debug("Patch 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Data Patch 操作执行完成")
+                logger.debug("Patch 操作结果", metadata: ["result": .data(ans)])
                 
                 return ans == nil ? .init(result: .init()) : ans!.set(result: NULL())
             }.logIfFail(logger: logger)
@@ -220,8 +220,8 @@ public extension OPA {
                 let r = (try? res.json(as: Answer<G?>.self).get()) ?? .init(result: nil)
                 
                 r.logHintsIfHas(label: "Get 查询", logger: logger)
-                logger.debug("查询结果", metadata: ["result": .data(r)])
                 logger.info("Data Get 查询执行完成")
+                logger.debug("查询结果", metadata: ["result": .data(r)])
                 
                 return r
             }.logIfFail(logger: logger)

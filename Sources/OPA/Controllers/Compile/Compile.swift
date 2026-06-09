@@ -75,8 +75,8 @@ public extension OPA {
                 }
             }.flatMapThrowing { (res: Answer<T?>) in
                 res.logHintsIfHas(label: "Partial 查询", logger: logger)
-                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Compile Partial 查询执行完成")
+                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 
                 return res
             }.logIfFail(logger: logger)

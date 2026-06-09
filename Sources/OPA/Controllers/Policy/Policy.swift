@@ -50,8 +50,8 @@ public extension OPA {
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
                 ans?.logHintsIfHas(label: "Save 操作", logger: logger)
-                logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Policy Save 操作执行完成")
+                logger.debug("Save 操作结果", metadata: ["result": .data(ans)])
                 
                 return ans == nil ? .init(result: .init()) : ans!.set(result: NULL())
             }.logIfFail(logger: logger)
@@ -86,8 +86,8 @@ public extension OPA {
                 let ans = try? res.json(as: Answer<AnyCodable?>.self).get()
                 
                 ans?.logHintsIfHas(label: "Delete 操作", logger: logger)
-                logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 logger.info("Policy Delete 操作执行完成")
+                logger.debug("Delete 操作结果", metadata: ["result": .data(ans)])
                 
                 return ans == nil ? .init(result: .init()) : ans!.set(result: NULL())
             }.logIfFail(logger: logger)
@@ -143,8 +143,8 @@ public extension OPA {
                 return wrapped
             }.flatMapThrowing { (res: PolicyAnswer<T>) in
                 res.logHintsIfHas(label: "Get 查询", logger: logger)
-                logger.debug("查询结果", metadata: ["result": .data(res)])
                 logger.info("Policy Get 查询执行完成")
+                logger.debug("查询结果", metadata: ["result": .data(res)])
                 
                 return res
             }.logIfFail(logger: logger)
@@ -175,8 +175,8 @@ public extension OPA {
                 return wrapped
             }.flatMapThrowing { (res: Answer<[PolicyResult<T>]>) in
                 res.logHintsIfHas(label: "List 查询", logger: logger)
-                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Policy List 查询执行完成")
+                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 
                 return res
             }.logIfFail(logger: logger)
@@ -221,8 +221,8 @@ public extension OPA {
                     }.asNull()
                     
                     r.logHintsIfHas(label: "策略语法检查", logger: logger)
-                    logger.debug("策略检查通过", metadata: ["result": .data(r)])
                     logger.info("策略语法检查执行完成")
+                    logger.debug("策略检查通过", metadata: ["result": .data(r)])
                     
                     return .success(r)
                 } else {
@@ -230,8 +230,8 @@ public extension OPA {
                         try res.json(as: Err.self).get()
                     }
                     
-                    logger.debug("策略检查未通过", metadata: ["error": .data(e)])
                     logger.info("策略语法检查执行完成")
+                    logger.debug("策略检查未通过", metadata: ["error": .data(e)])
                     
                     return .failure(e)
                 }

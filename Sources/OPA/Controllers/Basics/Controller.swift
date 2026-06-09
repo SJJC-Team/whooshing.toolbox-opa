@@ -127,6 +127,34 @@ public extension OPA {
     }
 }
 
+extension OPA.PatchOperation: CustomStringConvertible, Loggerable {
+    // MARK: - CustomStringConvertible
+    /// 符合标准的可读描述（常用于 print 或默认字符串插值）
+    public var description: String {
+        switch self {
+        case .add(let path, let value):
+            return "add '\(path)' with \(value)"
+        case .remove(let path):
+            return "remove '\(path)'"
+        case .replace(let path, let value):
+            return "replace '\(path)' with \(value)"
+        }
+    }
+    
+    /// 摘要日志：只关注操作类型和路径，不关心里面的大数据 value
+    @inlinable
+    public var summaryDescription: String {
+        switch self {
+        case .add(let path, _):
+            return "add(\(path))"
+        case .remove(let path):
+            return "remove(\(path))"
+        case .replace(let path, _):
+            return "replace(\(path))"
+        }
+    }
+}
+
 extension OPA.Controller {
     var eventLoop: EventLoop { argument.eventLoop }
     var client: HTTPClient { argument.client }

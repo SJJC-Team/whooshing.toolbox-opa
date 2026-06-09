@@ -62,7 +62,7 @@ public final class OPA: Sendable {
         self.data = DataController(argument: argument, logger: argument.logger.derive(subId: "data"))
         self.query = QueryController(argument: argument, logger: argument.logger.derive(subId: "query"))
         self.compile = CompileController(argument: argument, logger: argument.logger.derive(subId: "compile"))
-        logger.info("OPA Client 创建成功", metadata: argument.metadata)
+        logger.derive(subId: "sysinit").info("OPA Client 创建成功", metadata: argument.metadata)
     }
     
     /// 同步关闭客户端

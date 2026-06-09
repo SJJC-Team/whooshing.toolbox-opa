@@ -80,8 +80,8 @@ public extension OPA {
                     try res.json().get()
                 }
             }.flatMapThrowing { (res: T) in
-                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Simple 查询执行完成")
+                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 return res
             }.logIfFail(logger: logger)
         }
@@ -156,8 +156,8 @@ public extension OPA {
                 let ans = try? res.json(as: Answer<G?>.self).get()
                 
                 ans?.logHintsIfHas(label: "Data 查询", logger: logger)
-                logger.debug("查询结果", metadata: ["result": .data(ans)])
                 logger.info("Data 查询执行完成")
+                logger.debug("查询结果", metadata: ["result": .data(ans)])
                 
                 return ans ?? .init(result: nil)
             }.logIfFail(logger: logger)
@@ -235,8 +235,8 @@ public extension OPA {
                 }
             }.flatMapThrowing { (res: Answer<T?>) in
                 res.logHintsIfHas(label: "Adhoc 查询", logger: logger)
-                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 logger.info("Adhoc 查询执行完成")
+                logger.debug("查询结果", metadata: ["result": "\(res)"])
                 
                 return res
             }.logIfFail(logger: logger)
