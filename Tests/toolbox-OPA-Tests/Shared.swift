@@ -19,8 +19,8 @@ struct TestingShared {
         case examples
     }
     
-    static let host = ProcessInfo.processInfo.environment["GITHUB_OPA_TESTING_HOST"] ?? "localhost"
-    static let port = Int(ProcessInfo.processInfo.environment["GITHUB_OPA_TESTING_PORT"] ?? "8181")!
+    static let host = ProcessInfo.processInfo.environment["GITHUB_EOPA_TESTING_HOST"] ?? "localhost"
+    static let port = Int(ProcessInfo.processInfo.environment["GITHUB_EOPA_TESTING_PORT"] ?? "8181")!
     static let opaListening = try! isPortOpen(host: host, port: port)
     
     @MainActor static var opa: OPA? = nil

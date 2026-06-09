@@ -21,8 +21,8 @@ jobs:
       with_tsan: false
       ios_xcodebuild_action: ''
 
-      with_opa_host: "localhost"
-      with_opa_port: 8181
-      with_opa_version: "v1.13.1"
+      with_eopa_host: "localhost"
+      with_eopa_port: 8181
+      with_eopa_version: "v1.13.1"
 
     secrets: inherit
