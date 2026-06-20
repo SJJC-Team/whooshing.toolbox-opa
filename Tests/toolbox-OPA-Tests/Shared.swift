@@ -1,10 +1,6 @@
 import Testing
-import NIOCore
 import NIOPosix
-import NIO
 import Foundation
-import Logging
-import LoggingAdvanced
 @testable import OPA
 @preconcurrency import AnyCodable
 
@@ -26,9 +22,9 @@ struct TestingShared {
     @MainActor static var opa: OPA? = nil
     @MainActor static var testStage: TestStage = .data
     @MainActor static let loggingSystem: Void = {
-        var factory = LoggingFactory()
-        factory.add("Console")
-        factory.bootstrap()
+        LoggingFactory(strategies: [
+            .init(label: "Console", level: .trace)
+        ]).bootstrap()
     }()
     
     @MainActor

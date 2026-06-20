@@ -1,4 +1,3 @@
-import Logging
 import LoggingAdvanced
 
 public extension OPA {

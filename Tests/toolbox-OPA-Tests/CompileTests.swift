@@ -1,7 +1,4 @@
 import Testing
-import NIOCore
-import NIOPosix
-import NIO
 import Foundation
 @testable import OPA
 @preconcurrency import AnyCodable
