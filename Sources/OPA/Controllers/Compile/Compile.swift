@@ -62,7 +62,7 @@ public extension OPA {
                 ],
                 logger: logger,
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
+                    .badRequest: ("请求不合法", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
@@ -221,8 +221,8 @@ public extension OPA {
                 ],
                 logger: logger,
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
-                    .notFound: ("路径未找到 - data_filter \(path)", .external),
+                    .badRequest: ("请求不合法", .external()),
+                    .notFound: ("路径未找到 - data_filter \(path)", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in

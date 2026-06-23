@@ -5,7 +5,7 @@
 > 也同时支持 **[Enterprice Open Policy Agent (EOPA)](https://github.com/open-policy-agent/eopa)**
 > 特别感谢 OPA 团队创造了如此出色且强大的策略引擎，为本项目的实现提供了坚实基础。
 
-本项目为 [Whooshing](https://github.com/SJJC-Team/whooshing) 系统的 **OPA (Open Policy Agent) 依赖库**，旨在为 Swift 后端服务提供强类型的 OPA 交互能力。封装了 Policy 管理、Data 上下文维护以及高效的决策查询接口，全面支持 Swift Concurrency (Async/Await)。本库底层严格遵循并封装了 **[OPA REST API](https://www.openpolicyagent.org/docs/latest/rest-api/)**。
+本项目为 [Whooshing](https://github.com/whooshing-workshop/whooshing) 系统的 **OPA (Open Policy Agent) 依赖库**，旨在为 Swift 后端服务提供强类型的 OPA 交互能力。封装了 Policy 管理、Data 上下文维护以及高效的决策查询接口，全面支持 Swift Concurrency (Async/Await)。本库底层严格遵循并封装了 **[OPA REST API](https://www.openpolicyagent.org/docs/latest/rest-api/)**。
 
 ### 特性
 
@@ -22,7 +22,7 @@
 在你的 `Package.swift` 加入：
 
 ```swift
-.package(url: "https://github.com/SJJC-Team/whooshing.toolbox-opa", from: "1.0.4")
+.package(url: "https://github.com/whooshing-workshop/whooshing.toolbox-opa", from: "1.0.5")
 ```
 
 在依赖模块中引入:

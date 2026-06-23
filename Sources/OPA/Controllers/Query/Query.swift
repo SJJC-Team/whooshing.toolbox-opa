@@ -67,8 +67,8 @@ public extension OPA {
                 body: input,
                 logger: logger,
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
-                    .notFound: ("路径未找到 - simple \(input)", .external),
+                    .badRequest: ("请求不合法", .external()),
+                    .notFound: ("路径未找到 - simple \(input)", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
@@ -145,7 +145,7 @@ public extension OPA {
                 logger: logger,
                 validStatusCode: [.ok],
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
+                    .badRequest: ("请求不合法", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
@@ -221,7 +221,7 @@ public extension OPA {
                 ],
                 logger: logger,
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
+                    .badRequest: ("请求不合法", .external()),
                     .internalServerError: ("服务器未知错误", .internal),
                     .notImplemented: ("流式传输未实现", .internal)
                 ]

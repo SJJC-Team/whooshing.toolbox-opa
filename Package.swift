@@ -17,7 +17,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.3"),
-        .package(url: "https://github.com/whooshing-workshop/whooshing.toolbox-basic.git", from: "1.6.0"),
+        .package(url: "https://github.com/whooshing-workshop/whooshing.toolbox-basic.git", from: "1.6.2"),
         .package(url: "https://github.com/Flight-School/AnyCodable", from: "0.6.0")
     ],
     targets: [

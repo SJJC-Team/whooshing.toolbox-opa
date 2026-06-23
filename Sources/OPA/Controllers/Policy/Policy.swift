@@ -39,7 +39,7 @@ public extension OPA {
                 body: content,
                 logger: logger,
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
+                    .badRequest: ("请求不合法", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
@@ -74,8 +74,8 @@ public extension OPA {
                 method: .DELETE,
                 logger: logger,
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
-                    .notFound: ("路径未找到 - delete \(id)", .external),
+                    .badRequest: ("请求不合法", .external()),
+                    .notFound: ("路径未找到 - delete \(id)", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing {res throws(Errcase.ErrType) in

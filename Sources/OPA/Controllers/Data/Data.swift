@@ -69,8 +69,8 @@ public extension OPA {
                 logger: logger,
                 validStatusCode: [.ok, .noContent, .notModified],
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
-                    .notFound: ("路径未找到 - save \(path)", .external),
+                    .badRequest: ("请求不合法", .external()),
+                    .notFound: ("路径未找到 - save \(path)", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
@@ -108,7 +108,7 @@ public extension OPA {
                 logger: logger,
                 validStatusCode: [.ok, .noContent],
                 errorStatusCode: [
-                    .notFound: ("路径未找到 - delete \(path)", .external),
+                    .notFound: ("路径未找到 - delete \(path)", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
@@ -149,8 +149,8 @@ public extension OPA {
                 logger: logger,
                 validStatusCode: [.ok, .noContent],
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
-                    .notFound: ("路径未找到 - patch \(path)", .external),
+                    .badRequest: ("请求不合法", .external()),
+                    .notFound: ("路径未找到 - patch \(path)", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
@@ -210,7 +210,7 @@ public extension OPA {
                 logger: logger,
                 validStatusCode: [.ok],
                 errorStatusCode: [
-                    .badRequest: ("请求不合法", .external),
+                    .badRequest: ("请求不合法", .external()),
                     .internalServerError: ("服务器未知错误", .internal)
                 ]
             ).flatMapThrowing { res throws(Errcase.ErrType) in
